@@ -13,116 +13,100 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
   ]
 
   return (
-    <div className="w-full h-screen relative bg-white overflow-hidden">
-      <div className="w-full h-full bg-slate-50 rounded-3xl overflow-hidden relative">
+    <div className="w-full h-screen bg-background">
+      <div className="flex h-full">
         {/* Sidebar */}
-        <div className="w-52 h-full p-4 left-0 top-0 absolute border-r border-black-10%/20 flex flex-col justify-start items-center gap-2">
+        <div className="w-56 border-r border-border bg-card flex flex-col p-3">
           {/* Logo */}
-          <div className="self-stretch pb-3 flex flex-col justify-start items-start gap-1">
-            <div className="self-stretch px-2 py-6 rounded-lg flex justify-start items-center gap-2">
-              <div className="w-6 h-6 relative bg-black-4%/10 rounded-full overflow-hidden">
-                {/* Logo placeholder */}
+          <div className="px-3 py-4 mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">LA</span>
               </div>
-              <div className="text-black-100% text-sm font-normal font-inter leading-5">ByeWind</div>
+              <div className="font-semibold text-foreground">Lease Analyzer</div>
             </div>
           </div>
 
           {/* Menu Items */}
-          <div className="self-stretch flex flex-col justify-start items-start gap-1">
+          <nav className="flex-1 space-y-1">
             {menuItems.map((item) => (
-              <div key={item.id} className="self-stretch pb-1 flex flex-col justify-start items-start gap-1">
-                <div 
-                  className={`self-stretch p-2 rounded-xl flex justify-start items-center gap-1 cursor-pointer transition-colors ${
-                    activePage === item.id ? 'bg-black-4%/10' : 'hover:bg-black-4%/5'
-                  }`}
-                  onClick={() => setActivePage(item.id)}
-                >
-                  <div className="flex-1 rounded-xl flex justify-start items-center gap-2">
-                    <item.icon className="w-5 h-5 text-foreground" />
-                    <div className="text-black-100% text-sm font-normal font-inter leading-5">{item.label}</div>
-                  </div>
-                </div>
-              </div>
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activePage === item.id
+                    ? 'bg-secondary text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
             ))}
-          </div>
+          </nav>
 
-          {/* Bottom section for additional controls */}
-          <div className="mt-auto mb-4 self-stretch">
-            <div className="p-2 bg-black-4%/5 rounded-lg">
-              <div className="text-xs text-Contents-Tertiary text-center">
+          {/* Bottom section */}
+          <div className="pt-4 mt-4 border-t border-border">
+            <div className="px-3 py-2 rounded-lg bg-muted/50">
+              <div className="text-xs text-muted-foreground text-center">
                 Lease Analyzer v1.0
               </div>
             </div>
           </div>
         </div>
 
-        {/* Activities Sidebar */}
-        <div className="w-72 h-full p-4 right-0 top-0 absolute border-l border-black-10%/20 flex flex-col justify-start items-start gap-4 overflow-hidden">
-          {/* Activities Section */}
-          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-            <div className="self-stretch px-1 py-2 rounded-xl flex justify-start items-center gap-2">
-              <div className="flex-1 rounded-xl flex flex-col justify-center items-start">
-                <div className="self-stretch text-black-100% text-sm font-normal font-inter leading-5">Activities</div>
-              </div>
-            </div>
-            
-            {[
-              { title: 'New Pricing for ALD', time: 'Just now' },
-              { title: 'New Pricing for Lex', time: '59 minutes ago' },
-              { title: 'New Pricing for Novuna', time: '12 hours ago' },
-              { title: 'Special Offer - Cupra Leon', time: 'Today, 11:59 AM' },
-              { title: 'New Pricing for Novuna', time: 'Feb 2, 2025' }
-            ].map((activity, index) => (
-              <div key={index} className="self-stretch p-2 rounded-xl flex justify-start items-start gap-2">
-                <div className="w-6 h-6 bg-black-4%/10 rounded-full flex justify-center items-center">
-                  <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-                </div>
-                <div className="flex-1 rounded-xl flex flex-col justify-center items-start">
-                  <div className="self-stretch text-black-100% text-sm font-normal font-inter leading-5 line-clamp-1">{activity.title}</div>
-                  <div className="self-stretch text-black-40%/40 text-xs font-normal font-inter leading-4">{activity.time}</div>
-                </div>
-              </div>
-            ))}
-
-            {/* Timeline connector */}
-            <div className="w-px h-48 left-5 top-20 absolute flex flex-col justify-start items-center gap-10 overflow-hidden">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="w-px h-4 bg-black-10%/20"></div>
-              ))}
-            </div>
+        {/* Main Content */}
+        <div className="flex-1 flex">
+          <div className="flex-1 overflow-y-auto">
+            {children({ activePage, setActivePage })}
           </div>
 
-          {/* Top 10 Offers */}
-          <div className="self-stretch flex flex-col justify-start items-start gap-1">
-            <div className="self-stretch px-1 py-2 rounded-xl flex justify-start items-center gap-2">
-              <div className="flex-1 rounded-xl flex flex-col justify-center items-start">
-                <div className="self-stretch text-black-100% text-sm font-normal font-inter leading-5">Top 10 Offers</div>
+          {/* Right Sidebar */}
+          <div className="w-72 border-l border-border bg-card p-4 overflow-y-auto">
+            {/* Activities Section */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Activities</h3>
+              <div className="space-y-3">
+                {[
+                  { title: 'New Pricing for ALD', time: 'Just now' },
+                  { title: 'New Pricing for Lex', time: '59 minutes ago' },
+                  { title: 'New Pricing for Novuna', time: '12 hours ago' },
+                  { title: 'Special Offer - Cupra Leon', time: 'Today, 11:59 AM' },
+                  { title: 'New Pricing for Novuna', time: 'Feb 2, 2025' }
+                ].map((activity, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-foreground truncate">{activity.title}</div>
+                      <div className="text-xs text-muted-foreground">{activity.time}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            
-            {[
-              'Cupra Leon',
-              'Ford Capri', 
-              'Omoda 5',
-              'MG ZS',
-              'Tesla Model Y',
-              'Tesla Model 3'
-            ].map((offer, index) => (
-              <div key={index} className="self-stretch p-2 rounded-lg flex justify-start items-center gap-2">
-                <div className="w-6 h-6 bg-black-4%/10 rounded-full flex justify-center items-center">
-                  <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-                </div>
-                <div className="rounded-xl flex flex-col justify-center items-start">
-                  <div className="text-black-100% text-sm font-normal font-inter leading-5">{offer}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div className="ml-52 mr-72 h-full overflow-y-auto">
-          {children({ activePage, setActivePage })}
+            {/* Top Offers Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Top 10 Offers</h3>
+              <div className="space-y-2">
+                {[
+                  'Cupra Leon',
+                  'Ford Capri',
+                  'Omoda 5',
+                  'MG ZS',
+                  'Tesla Model Y',
+                  'Tesla Model 3'
+                ].map((offer, index) => (
+                  <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-secondary/50 transition-colors">
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
+                    </div>
+                    <span className="text-sm text-foreground">{offer}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

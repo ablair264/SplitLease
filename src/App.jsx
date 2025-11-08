@@ -7,7 +7,7 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard')
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-background">
       {currentView === 'dashboard' && <Dashboard onUploadClick={() => setCurrentView('upload')} />}
       {currentView === 'upload' && <FileUpload onBack={() => setCurrentView('dashboard')} />}
     </div>
