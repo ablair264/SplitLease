@@ -264,74 +264,74 @@ const BestDealsPage = () => {
           <p className="text-muted-foreground">Try adjusting your filters or upload some rate sheets first.</p>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden bg-card">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-secondary/60">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Vehicle
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Best Monthly
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Provider
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     P11D
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Term/Mileage
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Fuel/CO2
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Score
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-border">
                 {deals.map((deal, index) => (
-                  <tr key={deal.vehicle_id || index} className="hover:bg-gray-50">
+                  <tr key={deal.vehicle_id || index} className="hover:bg-secondary/40">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="font-medium text-gray-900">{deal.manufacturer}</div>
-                        <div className="text-sm text-gray-500">{deal.model}</div>
+                        <div className="font-medium text-foreground">{deal.manufacturer}</div>
+                        <div className="text-sm text-muted-foreground">{deal.model}</div>
                         {deal.cap_code && (
-                          <div className="text-xs text-gray-400">CAP: {deal.cap_code}</div>
+                          <div className="text-xs text-muted-foreground/70">CAP: {deal.cap_code}</div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{formatCurrency(deal.best_monthly_rental)}</div>
+                      <div className="font-medium text-foreground">{formatCurrency(deal.best_monthly_rental)}</div>
                       {deal.best_upfront_payment > 0 && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           + {formatCurrency(deal.best_upfront_payment)} upfront
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{deal.best_provider_name || '—'}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="font-medium text-foreground">{deal.best_provider_name || '—'}</div>
+                      <div className="text-xs text-muted-foreground">
                         {deal.last_updated ? new Date(deal.last_updated).toLocaleDateString() : ''}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-foreground">
                       {formatCurrency(deal.p11d_price)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{deal.best_term_months || 'N/A'} months</div>
-                      <div className="text-xs text-gray-500">{formatNumber(deal.best_annual_mileage)} miles/year</div>
+                      <div className="text-sm text-foreground">{deal.best_term_months || 'N/A'} months</div>
+                      <div className="text-xs text-muted-foreground">{formatNumber(deal.best_annual_mileage)} miles/year</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{deal.fuel_type || 'N/A'}</div>
+                      <div className="text-sm text-foreground">{deal.fuel_type || 'N/A'}</div>
                       {deal.co2_emissions !== null && (
-                        <div className="text-xs text-gray-500">{deal.co2_emissions}g CO2</div>
+                        <div className="text-xs text-muted-foreground">{deal.co2_emissions}g CO2</div>
                       )}
                       {deal.mpg && (
-                        <div className="text-xs text-gray-500">{deal.mpg} MPG</div>
+                        <div className="text-xs text-muted-foreground">{deal.mpg} MPG</div>
                       )}
                     </td>
                   <td className="px-6 py-4 whitespace-nowrap">

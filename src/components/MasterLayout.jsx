@@ -97,6 +97,9 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
                     </div>
                   </div>
                 ))}
+                {(!activity || activity.length === 0) && (
+                  <div className="text-xs text-muted-foreground">No recent uploads.</div>
+                )}
               </div>
             </div>
 
@@ -112,6 +115,9 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
                     <span className="text-sm text-foreground">{offer.manufacturer} {offer.model}</span>
                   </div>
                 ))}
+                {(!topOffers || topOffers.length === 0) && (
+                  <div className="text-xs text-muted-foreground">No top offers yet.</div>
+                )}
               </div>
             </div>
           </div>
