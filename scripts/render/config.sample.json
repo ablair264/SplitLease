@@ -1,0 +1,17 @@
+{
+  "out_dir": "/output",
+  "angles": ["CAM_FRONT34", "CAM_SIDE", "CAM_REAR34"],
+  "variants": [
+    {
+      "slug": "bmw_3series_2024_alpinewhite_19",
+      "color": "#ffffff",
+      "wheels": "WHEELS_19"
+    },
+    {
+      "slug": "bmw_3series_2024_black_20",
+      "color": "#000000",
+      "wheels": "WHEELS_20"
+    }
+  ]
+}
+
