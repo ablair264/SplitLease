@@ -883,7 +883,7 @@ const UploadPage = () => {
       setUploadState('results')
 
       // 2) Start server upload in background and report status when done
-      api.upload({ file: selectedFile, providerName: providerName.trim(), fieldMappings })
+      api.upload({ file: selectedFile, providerName: providerName.trim(), fieldMappings, headerNames: fileData?.headers })
         .then(resp => setProcessingResults(prev => ({ ...(prev || {}), server: true, upload: resp })))
         .catch(err => setProcessingResults(prev => ({ ...(prev || {}), server: true, uploadError: err.message })))
     } catch (e) {

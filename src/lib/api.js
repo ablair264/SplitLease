@@ -37,12 +37,15 @@ export const api = {
     return fetchJson(`/api/best-deals${qs ? `?${qs}` : ''}`)
   },
   search: (q, limit = 20) => fetchJson(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
-  upload: async ({ file, providerName, fieldMappings, uploadedBy }) => {
+  upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy }) => {
     const form = new FormData()
     form.append('file', file)
     form.append('providerName', providerName)
     if (uploadedBy) form.append('uploadedBy', uploadedBy)
     form.append('fieldMappings', JSON.stringify(fieldMappings || {}))
+    if (headerNames && Array.isArray(headerNames)) {
+      form.append('headerNames', JSON.stringify(headerNames))
+    }
     const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: form })
     const data = await res.json().catch(() => ({ success: false, error: 'Invalid JSON response' }))
     if (!res.ok || data.success === false) {
