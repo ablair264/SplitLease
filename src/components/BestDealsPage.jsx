@@ -5,6 +5,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
 import { Modal } from './ui/modal'
+import { computeScoreBreakdown } from '../lib/scoring'
 
 const BestDealsPage = () => {
   const [deals, setDeals] = useState([])
@@ -22,30 +23,16 @@ const BestDealsPage = () => {
   const [selectedDeal, setSelectedDeal] = useState(null)
 
   const computeBreakdown = (deal) => {
-    // Mirror the high-level logic used in results display; simplified
-    const monthly = parseFloat(deal.best_monthly_rental) || 0
-    const p11d = parseFloat(deal.p11d_price) || 0
-    const term = parseFloat(deal.best_term_months) || 36
-    const upfront = parseFloat(deal.best_upfront_payment) || 0
-    const mileage = parseFloat(deal.best_annual_mileage) || 10000
-
-    const totalPaid = monthly * term + upfront
-    const costEfficiency = p11d > 0 ? Math.max(0, Math.min(100, 100 - ((totalPaid / p11d) * 100 - 30) * 2)) : 75
-    const termScore = term >= 36 ? 10 : Math.max(0, (term / 36) * 10)
-    const mileageScore = mileage >= 10000 ? 10 : Math.max(0, (mileage / 10000) * 10)
-    const upfrontScore = upfront === 0 ? 10 : Math.max(0, 10 - Math.min(10, upfront / (monthly || 1)))
-
-    const score = Math.round((costEfficiency * 0.7 + termScore * 0.15 + mileageScore * 0.1 + upfrontScore * 0.05) * 10) / 10
-    return {
-      score,
-      factors: {
-        costEfficiency: Math.round(costEfficiency),
-        termScore: Math.round(termScore),
-        mileageScore: Math.round(mileageScore),
-        upfrontScore: Math.round(upfrontScore),
-      },
-      totals: { totalPaid, p11d, term, mileage, upfront, monthly }
-    }
+    // Reuse the same logic as Results (UploadPage)
+    return computeScoreBreakdown({
+      monthly_rental: deal.best_monthly_rental,
+      p11d: deal.p11d_price,
+      term: deal.best_term_months,
+      mileage: deal.best_annual_mileage,
+      mpg: deal.mpg,
+      co2: deal.co2_emissions,
+      fuel_type: deal.fuel_type,
+    })
   }
   const [error, setError] = useState('')
 
@@ -378,17 +365,26 @@ const BreakdownModal = ({ open, onClose, deal }) => {
   return (
     <Modal open={open} title={`${deal.manufacturer} ${deal.model} – Score details`}>
       <div className="space-y-3 text-sm">
-        <div>
-          <strong>Total paid:</strong> £{Math.round(b.totals.totalPaid).toLocaleString()} over {b.totals.term} months @ £{Math.round(b.totals.monthly).toLocaleString()}/mo
+        <div className="grid grid-cols-2 gap-2">
+          <div><strong>Monthly:</strong> £{Math.round(b.inputs.monthly).toLocaleString()}</div>
+          <div><strong>Term:</strong> {b.inputs.term} months {b.inputs.defaultsApplied.term && '(default)'}</div>
+          <div><strong>Mileage:</strong> {b.inputs.mileage.toLocaleString()} /yr {b.inputs.defaultsApplied.mileage && '(default)'}</div>
+          <div><strong>P11D:</strong> £{Math.round(b.inputs.p11d).toLocaleString()}</div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div>Cost efficiency: {b.factors.costEfficiency}/100</div>
-          <div>Term factor: {b.factors.termScore}/10</div>
-          <div>Mileage factor: {b.factors.mileageScore}/10</div>
-          <div>Upfront factor: {b.factors.upfrontScore}/10</div>
+          <div>Total lease cost: £{Math.round(b.derived.totalLeaseCost).toLocaleString()}</div>
+          <div>Cost vs P11D: {b.derived.totalCostVsP11DPercent}%</div>
+          <div>Cost per mile (p): {b.derived.costPerMile.toFixed(2)}</div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>Cost efficiency: {Math.round(b.components.costEfficiencyScore)}/100</div>
+          <div>Mileage allowance: {Math.round(b.components.mileageScore)}/100</div>
+          <div>Fuel efficiency: {Math.round(b.components.fuelScore)}/100</div>
+          <div>Emissions: {Math.round(b.components.emissionsScore)}/100</div>
         </div>
         <div className="mt-2">
           <span className="font-semibold">Overall score: {b.score}</span>
+          <span className="ml-2 text-xs text-gray-500">weights: cost {Math.round(b.weights.costEfficiency*100)}%, mileage {Math.round(b.weights.mileage*100)}%, fuel {Math.round(b.weights.fuel*100)}%, emissions {Math.round(b.weights.emissions*100)}%</span>
         </div>
         <div className="mt-4 flex justify-end">
           <button className="px-3 py-1 border rounded" onClick={onClose}>Close</button>
