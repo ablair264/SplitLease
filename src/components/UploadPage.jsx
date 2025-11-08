@@ -1204,6 +1204,13 @@ const UploadPage = () => {
               <>Preparing…</>
             )}
           </div>
+          {/* Progress bar */}
+          <div className="mt-2 h-2 w-full rounded bg-zinc-800 overflow-hidden">
+            <div
+              className="h-2 bg-amber-400 transition-all"
+              style={{ width: `${progress.total > 0 ? Math.min(100, Math.round((progress.processed / progress.total) * 100)) : 0}%` }}
+            />
+          </div>
         </div>
       </Modal>
     </div>

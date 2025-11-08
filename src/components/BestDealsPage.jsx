@@ -259,79 +259,79 @@ const BestDealsPage = () => {
 
       {/* Results */}
       {deals.length === 0 ? (
-        <Card className="p-12 text-center">
+        <Card className="p-12 text-center bg-zinc-900 border border-zinc-800 text-foreground">
           <h3 className="text-xl font-semibold mb-2">No deals found</h3>
           <p className="text-muted-foreground">Try adjusting your filters or upload some rate sheets first.</p>
         </Card>
       ) : (
-        <Card className="overflow-hidden bg-card">
+        <Card className="overflow-hidden bg-zinc-900 border border-zinc-800 text-foreground">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-secondary/60">
+              <thead className="bg-zinc-800/80">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Vehicle
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Best Monthly
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Provider
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     P11D
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Term/Mileage
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Fuel/CO2
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                     Score
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-card divide-y divide-border">
+              <tbody className="bg-zinc-900 divide-y divide-zinc-800">
                 {deals.map((deal, index) => (
-                  <tr key={deal.vehicle_id || index} className="hover:bg-secondary/40">
+                  <tr key={deal.vehicle_id || index} className="hover:bg-zinc-800/50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="font-medium text-foreground">{deal.manufacturer}</div>
-                        <div className="text-sm text-muted-foreground">{deal.model}</div>
+                        <div className="font-medium text-zinc-100">{deal.manufacturer}</div>
+                        <div className="text-sm text-zinc-400">{deal.model}</div>
                         {deal.cap_code && (
-                          <div className="text-xs text-muted-foreground/70">CAP: {deal.cap_code}</div>
+                          <div className="text-xs text-zinc-500">CAP: {deal.cap_code}</div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-foreground">{formatCurrency(deal.best_monthly_rental)}</div>
+                      <div className="font-medium text-zinc-100">{formatCurrency(deal.best_monthly_rental)}</div>
                       {deal.best_upfront_payment > 0 && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-zinc-400">
                           + {formatCurrency(deal.best_upfront_payment)} upfront
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-foreground">{deal.best_provider_name || '—'}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="font-medium text-zinc-100">{deal.best_provider_name || '—'}</div>
+                      <div className="text-xs text-zinc-400">
                         {deal.last_updated ? new Date(deal.last_updated).toLocaleDateString() : ''}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-foreground">
+                    <td className="px-6 py-4 whitespace-nowrap text-zinc-100">
                       {formatCurrency(deal.p11d_price)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-foreground">{deal.best_term_months || 'N/A'} months</div>
-                      <div className="text-xs text-muted-foreground">{formatNumber(deal.best_annual_mileage)} miles/year</div>
+                      <div className="text-sm text-zinc-100">{deal.best_term_months || 'N/A'} months</div>
+                      <div className="text-xs text-zinc-400">{formatNumber(deal.best_annual_mileage)} miles/year</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-foreground">{deal.fuel_type || 'N/A'}</div>
+                      <div className="text-sm text-zinc-100">{deal.fuel_type || 'N/A'}</div>
                       {deal.co2_emissions !== null && (
-                        <div className="text-xs text-muted-foreground">{deal.co2_emissions}g CO2</div>
+                        <div className="text-xs text-zinc-400">{deal.co2_emissions}g CO2</div>
                       )}
                       {deal.mpg && (
-                        <div className="text-xs text-muted-foreground">{deal.mpg} MPG</div>
+                        <div className="text-xs text-zinc-400">{deal.mpg} MPG</div>
                       )}
                     </td>
                   <td className="px-6 py-4 whitespace-nowrap">
