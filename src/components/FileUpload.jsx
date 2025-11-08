@@ -65,7 +65,7 @@ const FileUpload = ({ onBack }) => {
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
           const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })
           
-          const headers = data[0] || []
+          const headers = (data[0] || []).map(h => String(h ?? ''))
           const sampleRows = data.slice(1, 11)
           setFileData({
             headers,

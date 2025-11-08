@@ -139,14 +139,15 @@ const UploadPage = () => {
     
     // Normalize header text for comparison
     const normalizeText = (text) => {
-      return text.toLowerCase()
+      const s = String(text ?? '')
+      return s.toLowerCase()
         .replace(/[^a-z0-9]/g, '_')  // Replace non-alphanumeric with underscore
         .replace(/_+/g, '_')         // Collapse multiple underscores
         .replace(/^_|_$/g, '')       // Remove leading/trailing underscores
     }
     
     // Create normalized headers for matching
-    const normalizedHeaders = headers.map(header => normalizeText(header || ''))
+    const normalizedHeaders = (headers || []).map(header => normalizeText(header))
     
     // Match each standard field to the best header
     Object.entries(FIELD_MAPPING_PATTERNS).forEach(([standardField, patterns]) => {
