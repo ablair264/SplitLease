@@ -892,8 +892,8 @@ const UploadPage = () => {
 
           <div className="flex justify-between items-center w-full">
             <div className="flex gap-4">
-              <Button onClick={uploadToServer} variant="outline">
-                Upload File
+              <Button onClick={() => processFile(true)} variant="outline">
+                Test First 10 Rows
               </Button>
               <Button onClick={uploadToServer} className="bg-amber-400 hover:bg-amber-500">
                 Upload to Database
