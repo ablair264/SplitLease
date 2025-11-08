@@ -238,6 +238,123 @@ const UploadPage = () => {
     return matrix[str2.length][str1.length]
   }
 
+  // Preview parse (first ~10 rows) using robust CSV/XLSX parsers
+  const previewFirst10 = async () => {
+    const missingRequired = validateMapping()
+    if (missingRequired.length > 0) {
+      setError(`Please map required fields: ${missingRequired.map(f => STANDARD_FIELDS[f].label).join(', ')}`)
+      return
+    }
+    if (!providerName.trim()) {
+      setError('Please enter a provider name')
+      return
+    }
+    if (!selectedFile) {
+      setError('No file selected')
+      return
+    }
+
+    setUploadState('processing')
+    setError('')
+    try {
+      const ext = selectedFile.name.toLowerCase().split('.').pop()
+      const vehicles = []
+
+      const buildFromRows = (rows) => {
+        const limit = Math.min(11, rows.length)
+        for (let i = 1; i < limit; i++) {
+          const row = rows[i] || []
+          const vehicleData = {}
+          Object.entries(fieldMappings).forEach(([field, headerIndex]) => {
+            if (headerIndex !== undefined && row[headerIndex] !== undefined) {
+              vehicleData[field] = row[headerIndex]
+            }
+          })
+          if (!vehicleData.manufacturer || !vehicleData.model || !vehicleData.monthly_rental) continue
+          const scoreBreakdown = computeScoreBreakdown(vehicleData)
+          vehicles.push({
+            ...vehicleData,
+            score: scoreBreakdown.score,
+            scoreInfo: { category: getScoreCategory(scoreBreakdown.score) },
+            scoreBreakdown
+          })
+        }
+      }
+
+      if (ext === 'csv') {
+        await new Promise((resolve, reject) => {
+          Papa.parse(selectedFile, {
+            skipEmptyLines: true,
+            complete: (results) => { buildFromRows(results.data || []); resolve() },
+            error: reject
+          })
+        })
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const rows = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const workbook = XLSX.read(e.target.result, { type: 'array' })
+              const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
+              const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })
+              resolve(data)
+            } catch (err) { reject(err) }
+          }
+          reader.onerror = reject
+          reader.readAsArrayBuffer(selectedFile)
+        })
+        buildFromRows(rows)
+      } else {
+        throw new Error('Unsupported file format. Please upload CSV or XLSX.')
+      }
+
+      vehicles.sort((a, b) => b.score - a.score)
+      const total = vehicles.length
+      const averageScore = total > 0 ? Math.round((vehicles.reduce((s, v) => s + v.score, 0) / total) * 10) / 10 : 0
+      const topScore = total > 0 ? Math.max(...vehicles.map(v => v.score)) : 0
+      const results = {
+        success: true,
+        fileName: selectedFile.name,
+        stats: {
+          totalVehicles: total,
+          averageScore,
+          topScore,
+          scoreDistribution: {
+            exceptional: vehicles.filter(v => v.score >= 90).length,
+            excellent: vehicles.filter(v => v.score >= 70 && v.score < 90).length,
+            good: vehicles.filter(v => v.score >= 50 && v.score < 70).length,
+            fair: vehicles.filter(v => v.score >= 30 && v.score < 50).length,
+            poor: vehicles.filter(v => v.score < 30).length
+          }
+        },
+        topDeals: vehicles.slice(0, 100),
+        allVehicles: vehicles.slice(0, 1000).map(v => ({
+          m: v.manufacturer?.substring(0, 15) || '',
+          d: v.model?.substring(0, 40) || '',
+          p: Math.round(parseFloat(v.monthly_rental) || 0),
+          v: Math.round(parseFloat(v.p11d) || 0),
+          t: parseFloat(v.term) || 0,
+          mi: parseFloat(v.mileage) || 0,
+          s: v.score,
+          c: v.scoreInfo.category.substring(0, 4)
+        })),
+        detectedFormat: { format: ext },
+        scoringInfo: {
+          baseline: 'P11D',
+          formula: 'Enhanced cost efficiency scoring',
+          provider: providerName.trim(),
+          storedInDatabase: false,
+          processedCount: vehicles.length
+        }
+      }
+      console.log('Processing Results:', results)
+      setProcessingResults(results)
+      setUploadState('results')
+    } catch (e) {
+      setError(e.message)
+      setUploadState('mapping')
+    }
+  }
   // Load saved mappings on mount
   useEffect(() => {
     const loadSavedMappings = async () => {
@@ -892,7 +1009,7 @@ const UploadPage = () => {
 
           <div className="flex justify-between items-center w-full">
             <div className="flex gap-4">
-              <Button onClick={() => processFile(true)} variant="outline">
+              <Button onClick={previewFirst10} variant="outline">
                 Test First 10 Rows
               </Button>
               <Button onClick={uploadToServer} className="bg-amber-400 hover:bg-amber-500">
