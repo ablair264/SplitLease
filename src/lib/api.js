@@ -36,6 +36,7 @@ export const api = {
     const qs = toQuery(filters)
     return fetchJson(`/api/best-deals${qs ? `?${qs}` : ''}`)
   },
+  getDashboard: () => fetchJson('/api/dashboard/stats'),
   search: (q, limit = 20) => fetchJson(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy }) => {
     const form = new FormData()

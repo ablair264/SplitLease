@@ -1,39 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TrendingUp, TrendingDown, ChevronDown } from 'lucide-react'
 import { Card } from './ui/card'
+import { api } from '../lib/api'
 
 const DashboardPage = () => {
-  const metrics = [
-    {
-      title: 'Current Q Ratesheets',
-      value: '4',
-      change: '+11.01%',
-      isPositive: true,
-      bgColor: 'bg-amber-400'
-    },
-    {
-      title: 'Vehicle Models',
-      value: '9954',
-      change: '-0.03%',
-      isPositive: false,
-      bgColor: 'bg-background-4'
-    },
-    {
-      title: 'Deals above 90%',
-      value: '256',
-      change: '+15.03%',
-      isPositive: true,
-      bgColor: 'bg-background-5'
-    },
-    {
-      title: 'Top Funder',
-      value: 'Novuna',
-      change: '+6.08%',
-      isPositive: true,
-      bgColor: 'bg-background-4',
-      isText: true
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [stats, setStats] = useState(null) // get_market_stats()
+  const [providers, setProviders] = useState([]) // get_provider_performance()
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        setLoading(true)
+        const resp = await api.getDashboard()
+        if (!cancelled) {
+          setStats(resp.marketStats || null)
+          setProviders(resp.providerStats || [])
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const metrics = useMemo(() => {
+    const m = []
+    if (stats) {
+      m.push({ title: 'Active Offers', value: (stats.total_active_offers ?? 0).toLocaleString(), isPositive: true, change: '', bgColor: 'bg-amber-400' })
+      m.push({ title: 'Vehicles', value: (stats.total_vehicles ?? 0).toLocaleString(), isPositive: true, change: '', bgColor: 'bg-background-4' })
+      m.push({ title: 'Avg Deal Score', value: stats.avg_deal_score != null ? Math.round(stats.avg_deal_score) : '—', isPositive: true, change: '', bgColor: 'bg-background-5' })
+      m.push({ title: 'Top Manufacturer', value: stats.top_manufacturer || '—', isPositive: true, change: '', bgColor: 'bg-background-4', isText: true })
     }
-  ]
+    return m
+  }, [stats])
 
   return (
     <div className="pt-8 px-7">
@@ -46,8 +50,15 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 text-sm text-red-600">{error}</div>
+      )}
+
       {/* Metrics Cards */}
       <div className="flex justify-start items-start gap-7 flex-wrap mb-8">
+        {loading && metrics.length === 0 && (
+          <Card className="p-6">Loading metrics…</Card>
+        )}
         {metrics.map((metric, index) => (
           <Card key={index} className={`flex-1 min-w-48 p-6 ${metric.bgColor} rounded-[20px] border-none shadow-none`}>
             <div className="flex flex-col justify-start items-start gap-2">
@@ -84,24 +95,18 @@ const DashboardPage = () => {
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-Contents-Primary">📈 Recent Activity</h3>
             <div className="space-y-4">
-              {[
-                { action: 'New ratebook processed', provider: 'Lex Autolease', time: '2 hours ago', status: 'success' },
-                { action: 'Price update detected', provider: 'Arval', time: '5 hours ago', status: 'info' },
-                { action: 'Best deals refreshed', provider: 'Multiple', time: '1 day ago', status: 'success' },
-                { action: 'System maintenance', provider: 'System', time: '2 days ago', status: 'warning' }
-              ].map((activity, index) => (
+              {(providers || []).slice(0, 5).map((p, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
                   <div>
-                    <div className="font-medium text-sm text-Contents-Primary">{activity.action}</div>
-                    <div className="text-xs text-Contents-Tertiary">{activity.provider} • {activity.time}</div>
+                    <div className="font-medium text-sm text-Contents-Primary">{p.provider_name}</div>
+                    <div className="text-xs text-Contents-Tertiary">Avg £{Math.round(p.avg_monthly_rental || 0)} • Best deals: {p.best_deals_count || 0} • Market share: {Math.round(p.market_share_percent || 0)}%</div>
                   </div>
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.status === 'success' ? 'bg-green-500' :
-                    activity.status === 'info' ? 'bg-blue-500' :
-                    activity.status === 'warning' ? 'bg-amber-500' : 'bg-gray-500'
-                  }`}></div>
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
                 </div>
               ))}
+              {(!providers || providers.length === 0) && (
+                <div className="text-sm text-Contents-Tertiary">No provider stats yet.</div>
+              )}
             </div>
           </div>
         </Card>
@@ -112,20 +117,20 @@ const DashboardPage = () => {
             <h3 className="text-xl font-semibold text-Contents-Primary">⚡ Quick Stats</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-4 bg-white rounded-lg">
-                <div className="text-2xl font-bold text-amber-400">£285</div>
+                <div className="text-2xl font-bold text-amber-400">£{stats ? Math.round(stats.avg_monthly_payment || 0) : 0}</div>
                 <div className="text-xs text-Contents-Tertiary">Avg Monthly Payment</div>
               </div>
               <div className="text-center p-4 bg-white rounded-lg">
-                <div className="text-2xl font-bold text-green-500">87</div>
+                <div className="text-2xl font-bold text-green-500">{stats ? Math.round(stats.avg_deal_score || 0) : 0}</div>
                 <div className="text-xs text-Contents-Tertiary">Avg Deal Score</div>
               </div>
               <div className="text-center p-4 bg-white rounded-lg">
-                <div className="text-2xl font-bold text-blue-500">36</div>
-                <div className="text-xs text-Contents-Tertiary">Avg Term (months)</div>
+                <div className="text-2xl font-bold text-blue-500">{stats ? (stats.total_providers || 0) : 0}</div>
+                <div className="text-xs text-Contents-Tertiary">Active Providers</div>
               </div>
               <div className="text-center p-4 bg-white rounded-lg">
-                <div className="text-2xl font-bold text-purple-500">12K</div>
-                <div className="text-xs text-Contents-Tertiary">Avg Mileage</div>
+                <div className="text-2xl font-bold text-purple-500">{stats && stats.latest_upload ? new Date(stats.latest_upload).toLocaleDateString() : '—'}</div>
+                <div className="text-xs text-Contents-Tertiary">Latest Upload</div>
               </div>
             </div>
           </div>
