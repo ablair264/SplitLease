@@ -1,15 +1,11 @@
 export const Modal = ({ open, title, children }) => {
   if (!open) return null
   return (
-    <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50
-    }}>
-      <div style={{ background: 'white', borderRadius: 12, width: '90%', maxWidth: 480, padding: 24 }}>
-        {title && <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 12 }}>{title}</div>}
-        <div>{children}</div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="w-[90%] max-w-md rounded-xl border border-border bg-card p-6 shadow-lg">
+        {title && <div className="text-lg font-semibold text-foreground mb-3">{title}</div>}
+        <div className="text-foreground">{children}</div>
       </div>
     </div>
   )
 }
-

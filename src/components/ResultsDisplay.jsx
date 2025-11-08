@@ -89,11 +89,11 @@ const ResultsDisplay = ({ results, onReset }) => {
           </p>
           {detectedFormat && (
             <div className="mt-2 flex items-center gap-4">
-              <span className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+              <span className="px-3 py-1 rounded-full text-xs font-medium border border-amber-400 text-amber-300 bg-zinc-800">
                 📋 Format: {detectedFormat.format.charAt(0).toUpperCase() + detectedFormat.format.slice(1)}
               </span>
               {scoringInfo && (
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                <span className="px-3 py-1 rounded-full text-xs font-medium border border-blue-400 text-blue-300 bg-zinc-800">
                   🧮 Scoring: {scoringInfo.formula}
                 </span>
               )}

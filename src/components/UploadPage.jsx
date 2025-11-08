@@ -985,19 +985,19 @@ const UploadPage = () => {
 
           {/* Smart Mapping Results */}
           {fileData?.smartMapping && (
-            <Card className="p-4 w-full border-green-200 bg-green-50">
+            <Card className="p-4 w-full border-green-600 bg-zinc-800 text-green-300">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-green-700">
+                  <span className="text-sm font-medium">
                     🧠 Smart Mapping Applied
                   </span>
                 </div>
-                <div className="text-xs text-green-600">
+                <div className="text-xs">
                   Automatically mapped {fileData.smartMapping.detectedFields} of {fileData.smartMapping.totalFields} standard fields. 
                   Review and adjust mappings below before processing.
                 </div>
-                <div className="flex items-center gap-4 text-xs text-green-600">
+                <div className="flex items-center gap-4 text-xs">
                   <span>✓ Auto-detected: {getSmartMappingSummary()}</span>
                 </div>
               </div>
@@ -1039,17 +1039,17 @@ const UploadPage = () => {
                 </div>
               )}
 
-              <div className={`p-3 rounded-lg border ${useDatabaseStorage ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+              <div className={`p-3 rounded-lg border ${useDatabaseStorage ? 'bg-zinc-800 border-green-600 text-green-300' : 'bg-zinc-800 border-amber-600 text-amber-300'}`}>
                 <div className="flex items-center gap-2">
                   {useDatabaseStorage ? (
                     <>
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-green-700">Database connected - Data will be stored for best price comparison</span>
+                      <span className="text-sm">Database connected - Data will be stored for best price comparison</span>
                     </>
                   ) : (
                     <>
-                      <AlertTriangle className="w-4 h-4 text-amber-600" />
-                      <span className="text-sm text-amber-700">Database not configured - Analysis only (no storage)</span>
+                      <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      <span className="text-sm">Database not configured - Analysis only (no storage)</span>
                     </>
                   )}
                 </div>
@@ -1063,22 +1063,22 @@ const UploadPage = () => {
             </div>
           </Card>
 
-          <Card className="p-6 w-full max-h-96 overflow-y-auto">
+          <Card className="p-6 w-full max-h-96 overflow-y-auto bg-card">
             <div className="space-y-4">
               {Object.entries(STANDARD_FIELDS).map(([fieldKey, fieldInfo]) => {
                 const isAutoMapped = fieldMappings[fieldKey] !== undefined
                 const borderColor = fieldInfo.required 
-                  ? (isAutoMapped ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50')
-                  : (isAutoMapped ? 'border-blue-200 bg-blue-50' : 'border-gray-200')
+                  ? (isAutoMapped ? 'border-green-600 bg-zinc-800' : 'border-red-600 bg-zinc-900')
+                  : (isAutoMapped ? 'border-blue-600 bg-zinc-800' : 'border-border')
                 
                 return (
                   <div key={fieldKey} className={`space-y-2 p-3 rounded-lg border ${borderColor}`}>
                     <div>
-                      <div className="font-medium text-sm flex items-center gap-2">
-                        {isAutoMapped && <span className="text-green-600 text-xs">🧠</span>}
+                      <div className="font-medium text-sm flex items-center gap-2 text-foreground">
+                        {isAutoMapped && <span className="text-green-400 text-xs">🧠</span>}
                         {fieldInfo.label}
-                        {fieldInfo.required && <span className="text-red-500 text-xs">*Required</span>}
-                        {isAutoMapped && <span className="text-green-600 text-xs font-medium">Auto-mapped</span>}
+                        {fieldInfo.required && <span className="text-red-400 text-xs">*Required</span>}
+                        {isAutoMapped && <span className="text-green-400 text-xs font-medium">Auto-mapped</span>}
                       </div>
                       <div className="text-xs text-muted-foreground">{fieldInfo.description}</div>
                     </div>
@@ -1093,7 +1093,7 @@ const UploadPage = () => {
                       ))}
                     </Select>
                     {fieldMappings[fieldKey] !== undefined && (
-                      <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                      <div className="mt-2 p-2 bg-zinc-800 rounded text-xs text-foreground">
                         <strong>Preview:</strong> {getHeaderPreview(fieldMappings[fieldKey]) || 'No data'}
                       </div>
                     )}

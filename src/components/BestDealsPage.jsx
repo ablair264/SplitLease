@@ -343,7 +343,7 @@ const BestDealsPage = () => {
                           {Math.round(deal.best_deal_score)}
                         </span>
                       )}
-                      <button className="ml-2 text-xs text-blue-600 underline" onClick={() => openBreakdown(deal)}>Details</button>
+                      <button className="ml-2 px-2 py-1 rounded bg-zinc-800 text-white hover:bg-zinc-700 text-xs border border-border" onClick={() => openBreakdown(deal)}>Calculation</button>
                     </td>
                   </tr>
                 ))}

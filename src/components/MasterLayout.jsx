@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DollarSign, Award, BarChart3, Building2, Upload } from 'lucide-react'
+import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
   const [activePage, setActivePage] = useState(currentPage)
@@ -11,6 +12,26 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     { id: 'analytics', label: 'Analytics', icon: BarChart3, active: false },
     { id: 'providers', label: 'Providers', icon: Building2, active: false }
   ]
+
+  const [activity, setActivity] = useState([])
+  const [topOffers, setTopOffers] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [a, t] = await Promise.all([
+          api.getRecentUploads(5).catch(() => ({ data: [] })),
+          api.getTopOffers(10).catch(() => ({ data: [] })),
+        ])
+        if (!cancelled) {
+          setActivity(a.data || [])
+          setTopOffers(t.data || [])
+        }
+      } catch (_) {}
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <div className="w-full h-screen bg-background">
@@ -67,18 +88,12 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-foreground mb-3">Activities</h3>
               <div className="space-y-3">
-                {[
-                  { title: 'New Pricing for ALD', time: 'Just now' },
-                  { title: 'New Pricing for Lex', time: '59 minutes ago' },
-                  { title: 'New Pricing for Novuna', time: '12 hours ago' },
-                  { title: 'Special Offer - Cupra Leon', time: 'Today, 11:59 AM' },
-                  { title: 'New Pricing for Novuna', time: 'Feb 2, 2025' }
-                ].map((activity, index) => (
+                {(activity || []).map((a, index) => (
                   <div key={index} className="flex gap-2 items-start">
                     <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-foreground truncate">{activity.title}</div>
-                      <div className="text-xs text-muted-foreground">{activity.time}</div>
+                      <div className="text-sm text-foreground truncate">{a.provider_name || 'Upload'}</div>
+                      <div className="text-xs text-muted-foreground">{a.filename} • {new Date(a.created_at).toLocaleString()}</div>
                     </div>
                   </div>
                 ))}
@@ -89,19 +104,12 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3">Top 10 Offers</h3>
               <div className="space-y-2">
-                {[
-                  'Cupra Leon',
-                  'Ford Capri',
-                  'Omoda 5',
-                  'MG ZS',
-                  'Tesla Model Y',
-                  'Tesla Model 3'
-                ].map((offer, index) => (
+                {(topOffers || []).map((offer, index) => (
                   <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-secondary/50 transition-colors">
                     <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
                     </div>
-                    <span className="text-sm text-foreground">{offer}</span>
+                    <span className="text-sm text-foreground">{offer.manufacturer} {offer.model}</span>
                   </div>
                 ))}
               </div>

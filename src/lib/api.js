@@ -37,6 +37,8 @@ export const api = {
     return fetchJson(`/api/best-deals${qs ? `?${qs}` : ''}`)
   },
   getDashboard: () => fetchJson('/api/dashboard/stats'),
+  getRecentUploads: (limit = 10) => fetchJson(`/api/dashboard/activity?limit=${limit}`),
+  getTopOffers: (limit = 10) => fetchJson(`/api/dashboard/top-offers?limit=${limit}`),
   search: (q, limit = 20) => fetchJson(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy }) => {
     const form = new FormData()
