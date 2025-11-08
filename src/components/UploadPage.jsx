@@ -812,19 +812,80 @@ const UploadPage = () => {
     setUploadState('processing')
     setError('')
     try {
-      const response = await api.upload({
-        file: selectedFile,
-        providerName: providerName.trim(),
-        fieldMappings,
-      })
-      // Build a compact results object to show confirmation
-      const results = {
-        server: true,
-        upload: response,
-        fileName: selectedFile.name,
+      // 1) Build a quick preview (first ~200 rows) so we always show results
+      const ext = selectedFile.name.toLowerCase().split('.') .pop()
+      const vehicles = []
+      const buildFromRows = (rows) => {
+        const limit = Math.min(201, rows.length)
+        for (let i = 1; i < limit; i++) {
+          const row = rows[i] || []
+          const v = {}
+          Object.entries(fieldMappings).forEach(([field, headerIndex]) => {
+            if (headerIndex !== undefined && row[headerIndex] !== undefined) v[field] = row[headerIndex]
+          })
+          if (!v.manufacturer || !v.model || !v.monthly_rental) continue
+          const sb = computeScoreBreakdown(v)
+          vehicles.push({ ...v, score: sb.score, scoreInfo: { category: getScoreCategory(sb.score) }, scoreBreakdown: sb })
+        }
       }
-      setProcessingResults(results)
+      if (ext === 'csv') {
+        await new Promise((resolve, reject) => {
+          Papa.parse(selectedFile, { skipEmptyLines: true, complete: (r) => { buildFromRows(r.data || []); resolve() }, error: reject })
+        })
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const rows = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const wb = XLSX.read(e.target.result, { type: 'array' })
+              const ws = wb.Sheets[wb.SheetNames[0]]
+              resolve(XLSX.utils.sheet_to_json(ws, { header: 1 }))
+            } catch (err) { reject(err) }
+          }
+          reader.onerror = reject
+          reader.readAsArrayBuffer(selectedFile)
+        })
+        buildFromRows(rows)
+      }
+      vehicles.sort((a,b) => b.score - a.score)
+      const total = vehicles.length
+      const avg = total > 0 ? Math.round((vehicles.reduce((s,v)=>s+v.score,0)/total)*10)/10 : 0
+      const previewResults = {
+        success: true,
+        fileName: selectedFile.name,
+        stats: {
+          totalVehicles: total,
+          averageScore: avg,
+          topScore: total>0 ? Math.max(...vehicles.map(v=>v.score)) : 0,
+          scoreDistribution: {
+            exceptional: vehicles.filter(v=>v.score>=90).length,
+            excellent: vehicles.filter(v=>v.score>=70 && v.score<90).length,
+            good: vehicles.filter(v=>v.score>=50 && v.score<70).length,
+            fair: vehicles.filter(v=>v.score>=30 && v.score<50).length,
+            poor: vehicles.filter(v=>v.score<30).length,
+          },
+        },
+        topDeals: vehicles.slice(0, 100),
+        allVehicles: vehicles.slice(0, 1000).map(v => ({
+          m: v.manufacturer?.substring(0, 15) || '',
+          d: v.model?.substring(0, 40) || '',
+          p: Math.round(parseFloat(v.monthly_rental) || 0),
+          v: Math.round(parseFloat(v.p11d) || 0),
+          t: parseFloat(v.term) || 0,
+          mi: parseFloat(v.mileage) || 0,
+          s: v.score,
+          c: v.scoreInfo.category.substring(0, 4),
+        })),
+        detectedFormat: { format: ext },
+        scoringInfo: { baseline: 'P11D', formula: 'Enhanced cost efficiency scoring', provider: providerName.trim(), storedInDatabase: true, processedCount: total },
+      }
+      setProcessingResults(previewResults)
       setUploadState('results')
+
+      // 2) Start server upload in background and report status when done
+      api.upload({ file: selectedFile, providerName: providerName.trim(), fieldMappings })
+        .then(resp => setProcessingResults(prev => ({ ...(prev || {}), server: true, upload: resp })))
+        .catch(err => setProcessingResults(prev => ({ ...(prev || {}), server: true, uploadError: err.message })))
     } catch (e) {
       setError(e.message)
       setUploadState('mapping')
@@ -1050,37 +1111,35 @@ const UploadPage = () => {
 
   // Show results if processing is complete
   if (uploadState === 'results' && processingResults) {
-    if (processingResults.server && processingResults.upload) {
-      const u = processingResults.upload
-      return (
-        <div className="pt-24 px-7">
-          <div className="mb-6">
-            <div className="text-2xl font-semibold">✅ Upload Complete</div>
-            <div className="text-sm text-muted-foreground">{processingResults.fileName} processed and stored</div>
-          </div>
-          <Card className="p-6 max-w-xl">
+    return (
+      <div className="pt-24 px-7 space-y-6">
+        <ResultsDisplay results={processingResults} onReset={resetUpload} />
+        <Card className="p-6 max-w-2xl">
+          {!processingResults.server && (
+            <div className="text-sm">Uploading to database...</div>
+          )}
+          {processingResults.upload && (
             <div className="space-y-2 text-sm">
-              <div><strong>Session ID:</strong> {u.sessionId}</div>
-              <div><strong>Total rows:</strong> {u.totalRows}</div>
-              <div><strong>Valid rows:</strong> {u.validRows}</div>
-              <div><strong>Processed:</strong> {u.processed}</div>
-              <div><strong>Errors:</strong> {u.errors}</div>
-              {u.errorDetails?.length > 0 && (
+              <div className="text-lg font-semibold">✅ Upload Complete</div>
+              <div><strong>Session ID:</strong> {processingResults.upload.sessionId}</div>
+              <div><strong>Total rows:</strong> {processingResults.upload.totalRows}</div>
+              <div><strong>Valid rows:</strong> {processingResults.upload.validRows}</div>
+              <div><strong>Processed:</strong> {processingResults.upload.processed}</div>
+              <div><strong>Errors:</strong> {processingResults.upload.errors}</div>
+              {processingResults.upload.errorDetails?.length > 0 && (
                 <div className="mt-2">
                   <strong>Error details (first few):</strong>
-                  <pre className="mt-1 bg-gray-100 p-2 rounded text-xs overflow-auto">{JSON.stringify(u.errorDetails, null, 2)}</pre>
+                  <pre className="mt-1 bg-gray-100 p-2 rounded text-xs overflow-auto">{JSON.stringify(processingResults.upload.errorDetails, null, 2)}</pre>
                 </div>
               )}
             </div>
-          </Card>
-          <div className="mt-6 flex gap-3">
-            <Button onClick={resetUpload} variant="outline">Upload Another File</Button>
-            <Button onClick={resetUpload} className="bg-amber-400 hover:bg-amber-500">Done</Button>
-          </div>
-        </div>
-      )
-    }
-    return <ResultsDisplay results={processingResults} onReset={resetUpload} />
+          )}
+          {processingResults.uploadError && (
+            <div className="text-sm text-red-600">Upload failed: {processingResults.uploadError}</div>
+          )}
+        </Card>
+      </div>
+    )
   }
 
   return (
