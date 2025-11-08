@@ -4,6 +4,7 @@ import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
+import { Modal } from './ui/modal'
 
 const BestDealsPage = () => {
   const [deals, setDeals] = useState([])
@@ -17,6 +18,35 @@ const BestDealsPage = () => {
   const [totalDeals, setTotalDeals] = useState(0)
   const [manufacturers, setManufacturers] = useState([])
   const [fuelTypes, setFuelTypes] = useState([])
+  const [showBreakdown, setShowBreakdown] = useState(false)
+  const [selectedDeal, setSelectedDeal] = useState(null)
+
+  const computeBreakdown = (deal) => {
+    // Mirror the high-level logic used in results display; simplified
+    const monthly = parseFloat(deal.best_monthly_rental) || 0
+    const p11d = parseFloat(deal.p11d_price) || 0
+    const term = parseFloat(deal.best_term_months) || 36
+    const upfront = parseFloat(deal.best_upfront_payment) || 0
+    const mileage = parseFloat(deal.best_annual_mileage) || 10000
+
+    const totalPaid = monthly * term + upfront
+    const costEfficiency = p11d > 0 ? Math.max(0, Math.min(100, 100 - ((totalPaid / p11d) * 100 - 30) * 2)) : 75
+    const termScore = term >= 36 ? 10 : Math.max(0, (term / 36) * 10)
+    const mileageScore = mileage >= 10000 ? 10 : Math.max(0, (mileage / 10000) * 10)
+    const upfrontScore = upfront === 0 ? 10 : Math.max(0, 10 - Math.min(10, upfront / (monthly || 1)))
+
+    const score = Math.round((costEfficiency * 0.7 + termScore * 0.15 + mileageScore * 0.1 + upfrontScore * 0.05) * 10) / 10
+    return {
+      score,
+      factors: {
+        costEfficiency: Math.round(costEfficiency),
+        termScore: Math.round(termScore),
+        mileageScore: Math.round(mileageScore),
+        upfrontScore: Math.round(upfrontScore),
+      },
+      totals: { totalPaid, p11d, term, mileage, upfront, monthly }
+    }
+  }
   const [error, setError] = useState('')
 
   // Lazy import to avoid circulars
@@ -97,6 +127,11 @@ const BestDealsPage = () => {
     if (score >= 50) return '#EAB308'
     if (score >= 30) return '#F97316'
     return '#EF4444'
+  }
+
+  const openBreakdown = (deal) => {
+    setSelectedDeal({ ...deal, breakdown: computeBreakdown(deal) })
+    setShowBreakdown(true)
   }
 
   const downloadCSV = () => {
@@ -312,7 +347,7 @@ const BestDealsPage = () => {
                         <div className="text-xs text-gray-500">{deal.mpg} MPG</div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                       {deal.best_deal_score && (
                         <span 
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
@@ -321,6 +356,7 @@ const BestDealsPage = () => {
                           {Math.round(deal.best_deal_score)}
                         </span>
                       )}
+                      <button className="ml-2 text-xs text-blue-600 underline" onClick={() => openBreakdown(deal)}>Details</button>
                     </td>
                   </tr>
                 ))}
@@ -329,8 +365,39 @@ const BestDealsPage = () => {
           </div>
         </Card>
       )}
+      <BreakdownModal open={showBreakdown} onClose={() => setShowBreakdown(false)} deal={selectedDeal} />
     </div>
   )
 }
+
+// Modal rendering for breakdown
+// Attach after component to keep file simple
+const BreakdownModal = ({ open, onClose, deal }) => {
+  if (!open || !deal) return null
+  const b = deal.breakdown
+  return (
+    <Modal open={open} title={`${deal.manufacturer} ${deal.model} – Score details`}>
+      <div className="space-y-3 text-sm">
+        <div>
+          <strong>Total paid:</strong> £{Math.round(b.totals.totalPaid).toLocaleString()} over {b.totals.term} months @ £{Math.round(b.totals.monthly).toLocaleString()}/mo
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>Cost efficiency: {b.factors.costEfficiency}/100</div>
+          <div>Term factor: {b.factors.termScore}/10</div>
+          <div>Mileage factor: {b.factors.mileageScore}/10</div>
+          <div>Upfront factor: {b.factors.upfrontScore}/10</div>
+        </div>
+        <div className="mt-2">
+          <span className="font-semibold">Overall score: {b.score}</span>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button className="px-3 py-1 border rounded" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+export { BreakdownModal }
 
 export default BestDealsPage
