@@ -1,4 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+// Normalize base URL: allow values without scheme (e.g., "my-app.up.railway.app")
+let __RAW_BASE__ = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+if (__RAW_BASE__ && !__RAW_BASE__.startsWith('http')) {
+  __RAW_BASE__ = `https://${__RAW_BASE__.replace(/^\/+/, '')}`
+}
+const API_BASE_URL = (__RAW_BASE__ || '').replace(/\/+$/, '')
 
 const toQuery = (params = {}) => {
   const qp = new URLSearchParams()
@@ -47,4 +52,3 @@ export const api = {
   },
   refreshCache: () => fetchJson('/api/refresh-cache', { method: 'POST' }),
 }
-
