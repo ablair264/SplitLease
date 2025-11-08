@@ -359,16 +359,13 @@ const UploadPage = () => {
       setUploadState('mapping')
     }
   }
-  // Load saved mappings on mount
+  // Load saved mappings on mount (via backend)
   useEffect(() => {
     const loadSavedMappings = async () => {
       try {
-        // Simulate getting saved mappings - replace with actual API call
-        const mockMappings = [
-          { id: '1', provider_name: 'Lex Autolease', column_mappings: { manufacturer: 0, model: 1, monthly_rental: 2 } },
-          { id: '2', provider_name: 'Arval', column_mappings: { manufacturer: 1, model: 2, monthly_rental: 3 } }
-        ]
-        setSavedMappings(mockMappings)
+        const { api } = await import('../lib/api')
+        const r = await api.getMappings(50)
+        if (r && r.success) setSavedMappings(r.data || [])
       } catch (error) {
         console.warn('Could not load saved mappings:', error.message)
       }
@@ -482,6 +479,30 @@ const UploadPage = () => {
   const loadSavedMapping = (savedMapping) => {
     setProviderName(savedMapping.provider_name)
     setFieldMappings(savedMapping.column_mappings || {})
+  }
+
+  // Save mapping button
+  const [saveStatus, setSaveStatus] = useState('')
+  const saveCurrentMapping = async () => {
+    try {
+      if (!providerName.trim()) { setSaveStatus('Enter provider name'); return }
+      if (!fieldMappings || Object.keys(fieldMappings).length === 0) { setSaveStatus('No fields mapped'); return }
+      setSaveStatus('Saving…')
+      const { api } = await import('../lib/api')
+      const headers = (fileData?.headers || []).map(h => String(h ?? ''))
+      const r = await api.saveMapping({ providerName: providerName.trim(), fieldMappings, headerNames: headers })
+      if (r && r.success) {
+        setSaveStatus('Saved')
+        const list = await api.getMappings(50)
+        if (list && list.success) setSavedMappings(list.data || [])
+      } else {
+        setSaveStatus(r?.error || 'Save failed')
+      }
+    } catch (e) {
+      setSaveStatus(e.message)
+    } finally {
+      setTimeout(() => setSaveStatus(''), 2500)
+    }
   }
 
   const parseNumeric = (value) => {
@@ -1104,13 +1125,19 @@ const UploadPage = () => {
           </Card>
 
           <div className="flex justify-between items-center w-full">
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <Button onClick={previewFirst10} variant="outline">
                 Test First 10 Rows
               </Button>
               <Button onClick={uploadToServer} className="bg-amber-400 hover:bg-amber-500">
                 Upload to Database
               </Button>
+              <Button onClick={saveCurrentMapping} variant="outline">
+                Save Mapping
+              </Button>
+              {saveStatus && (
+                <span className="text-xs text-muted-foreground">{saveStatus}</span>
+              )}
             </div>
             
             {validateMapping().length > 0 && (

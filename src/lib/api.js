@@ -57,5 +57,12 @@ export const api = {
     return data
   },
   getUploadStatus: async (id) => fetchJson(`/api/upload/${encodeURIComponent(id)}/status`),
+  getMappings: async (limit = 50) => fetchJson(`/api/mappings?limit=${limit}`),
+  getMappingByProvider: async (provider) => fetchJson(`/api/mappings?provider=${encodeURIComponent(provider)}`),
+  saveMapping: async ({ providerName, fieldMappings, headerNames }) => fetchJson(`/api/mappings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ providerName, fieldMappings, headerNames }),
+  }),
   refreshCache: () => fetchJson('/api/refresh-cache', { method: 'POST' }),
 }
