@@ -1118,7 +1118,7 @@ const UploadPage = () => {
   // Show results if processing is complete
   if (uploadState === 'results' && processingResults) {
     return (
-      <div className="pt-24 px-7 space-y-6">
+      <div className="pt-8 px-7 space-y-6">
         <ResultsDisplay results={processingResults} onReset={resetUpload} />
         <Card className="p-6 max-w-2xl">
           {!processingResults.server && (
@@ -1149,7 +1149,7 @@ const UploadPage = () => {
   }
 
   return (
-    <div className="pt-24 px-7">
+    <div className="pt-8 px-7">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="text-black-100% text-sm font-semibold font-inter leading-5">Upload & Process</div>

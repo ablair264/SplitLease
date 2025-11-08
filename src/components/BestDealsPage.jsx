@@ -174,7 +174,7 @@ const BestDealsPage = () => {
 
   if (loading) {
     return (
-      <div className="pt-24 px-7">
+      <div className="pt-8 px-7">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full mb-4"></div>
           <p className="text-lg font-semibold">Loading best deals from database...</p>
@@ -184,7 +184,7 @@ const BestDealsPage = () => {
   }
 
   return (
-    <div className="pt-24 px-7">
+    <div className="pt-8 px-7">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

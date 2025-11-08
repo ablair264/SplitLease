@@ -36,7 +36,7 @@ const DashboardPage = () => {
   ]
 
   return (
-    <div className="pt-24 px-7">
+    <div className="pt-8 px-7">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="text-black-100% text-sm font-semibold font-inter leading-5">Overview</div>

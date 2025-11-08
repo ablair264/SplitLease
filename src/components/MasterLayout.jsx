@@ -14,7 +14,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
 
   return (
     <div className="w-full h-screen relative bg-white overflow-hidden">
-      <div className="w-full h-full mt-7 bg-slate-50 rounded-3xl overflow-hidden relative">
+      <div className="w-full h-full bg-slate-50 rounded-3xl overflow-hidden relative">
         {/* Sidebar */}
         <div className="w-52 h-full p-4 left-0 top-0 absolute border-r border-black-10%/20 flex flex-col justify-start items-center gap-2">
           {/* Logo */}

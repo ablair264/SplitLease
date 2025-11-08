@@ -74,7 +74,7 @@ const ResultsDisplay = ({ results, onReset }) => {
   const { stats, topDeals, allVehicles, fileName, detectedFormat, scoringInfo } = results
 
   return (
-    <div className="pt-24 px-7">
+    <div className="pt-8 px-7">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

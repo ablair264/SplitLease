@@ -14,7 +14,7 @@ const Dashboard = () => {
         return <BestDealsPage />
       case 'analytics':
         return (
-          <div className="pt-24 px-7">
+          <div className="pt-8 px-7">
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold mb-4">📊 Analytics</h2>
               <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
@@ -23,7 +23,7 @@ const Dashboard = () => {
         )
       case 'providers':
         return (
-          <div className="pt-24 px-7">
+          <div className="pt-8 px-7">
             <div className="text-center py-12">
               <h2 className="text-2xl font-semibold mb-4">🏢 Providers</h2>
               <p className="text-muted-foreground">Provider management coming soon...</p>
