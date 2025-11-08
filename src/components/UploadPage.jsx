@@ -131,6 +131,7 @@ const UploadPage = () => {
   const [useDatabaseStorage, setUseDatabaseStorage] = useState(true)
   const [processingResults, setProcessingResults] = useState(null)
   const [showAnalyzing, setShowAnalyzing] = useState(false)
+  const [progress, setProgress] = useState({ status: 'idle', processed: 0, total: 0 })
 
   // Smart mapping function to automatically detect field mappings
   const performSmartMapping = (headers) => {
@@ -819,6 +820,7 @@ const UploadPage = () => {
       // Run upload and local analysis in parallel. We only show results after both finish.
       const uploadPromise = api.upload({ file: selectedFile, providerName: providerName.trim(), fieldMappings, headerNames: fileData?.headers })
 
+      // Start analysis immediately (local-only)
       const analysisPromise = (async () => {
         const ext = selectedFile.name.toLowerCase().split('.').pop()
         const vehicles = []
@@ -888,9 +890,35 @@ const UploadPage = () => {
         }
       })()
 
-      const [uploadResp, analysis] = await Promise.all([uploadPromise, analysisPromise])
+      const uploadResp = await uploadPromise
+      // Poll upload status until completed
+      const sessionId = uploadResp.sessionId
+      const poll = async () => {
+        try {
+          const s = await api.getUploadStatus(sessionId)
+          if (s && s.data) {
+            const d = s.data
+            const total = Number(d.total_rows || 0)
+            const processed = Number(d.processed_rows || 0)
+            setProgress({ status: d.status || 'processing', processed, total })
+            if ((d.status || '').toLowerCase() === 'completed') return true
+          }
+        } catch (_) { /* ignore transient errors */ }
+        return false
+      }
+      // Initial poll update
+      await poll()
+      // Continue polling every 2s until completion
+      await new Promise(async (resolve) => {
+        const iv = setInterval(async () => {
+          const done = await poll()
+          if (done) { clearInterval(iv); resolve(null) }
+        }, 2000)
+      })
+
+      const analysis = await analysisPromise
       setShowAnalyzing(false)
-      setProcessingResults({ ...analysis, server: true, upload: uploadResp })
+      setProcessingResults({ ...analysis, server: true, upload: { sessionId, totalRows: progress.total, validRows: analysis?.stats?.totalVehicles || 0, processed: progress.processed, errors: 0 } })
       setUploadState('results')
     } catch (e) {
       setShowAnalyzing(false)
@@ -1162,9 +1190,20 @@ const UploadPage = () => {
       </Card>
 
       <Modal open={showAnalyzing} title="Analyzing data">
-        <div className="flex items-center gap-3">
-          <div className="animate-spin w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full"></div>
-          <div className="text-sm text-Contents-Primary">We’re analyzing your ratebook to surface the best deals…</div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full"></div>
+            <div className="text-sm text-Contents-Primary">We’re analyzing your ratebook to surface the best deals…</div>
+          </div>
+          <div className="text-xs text-Contents-Tertiary">
+            {progress.total > 0 ? (
+              <>
+                Upload progress: {progress.processed.toLocaleString()} / {progress.total.toLocaleString()} rows ({Math.round(progress.processed / progress.total * 100)}%)
+              </>
+            ) : (
+              <>Preparing…</>
+            )}
+          </div>
         </div>
       </Modal>
     </div>

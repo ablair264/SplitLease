@@ -54,5 +54,6 @@ export const api = {
     }
     return data
   },
+  getUploadStatus: async (id) => fetchJson(`/api/upload/${encodeURIComponent(id)}/status`),
   refreshCache: () => fetchJson('/api/refresh-cache', { method: 'POST' }),
 }
