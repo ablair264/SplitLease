@@ -27,7 +27,10 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom'
+
 const FleetpricesHomepage = ({ onLogin }) => {
+  const navigate = useNavigate()
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [leaseType, setLeaseType] = useState('personal');
@@ -370,7 +373,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
               <a href="#" style={styles.topBarLink}>Blog</a>
               <a href="#" style={styles.topBarLink}>Help</a>
               <a href="#" style={styles.topBarLink}>Contact</a>
-              <button onClick={onLogin} style={styles.topBarLink}>Login</button>
+              <button onClick={() => (onLogin ? onLogin() : navigate('/login'))} style={styles.topBarLink}>Login</button>
             </div>
           </div>
         </div>

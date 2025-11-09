@@ -9,3 +9,8 @@
 #   to = "https://your-railway-app.up.railway.app/api/:splat"
 #   status = 200
 
+# SPA fallback so refresh keeps the current route
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

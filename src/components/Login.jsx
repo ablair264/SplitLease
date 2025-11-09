@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login({ onBack, onSuccess }) {
+  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -10,7 +12,7 @@ export default function Login({ onBack, onSuccess }) {
     if (username === 'admin' && password === '123') {
       localStorage.setItem('auth_user', username)
       setError('')
-      onSuccess && onSuccess()
+      if (onSuccess) onSuccess(); else navigate('/app')
     } else {
       setError('Invalid credentials')
     }
@@ -32,11 +34,10 @@ export default function Login({ onBack, onSuccess }) {
           {error && <div className="text-xs text-red-500">{error}</div>}
           <div className="flex gap-2 pt-2">
             <button type="submit" className="px-3 py-2 rounded bg-amber-400 hover:bg-amber-500 text-black">Login</button>
-            <button type="button" onClick={onBack} className="px-3 py-2 rounded border border-input text-foreground">Back</button>
+            <button type="button" onClick={() => (onBack ? onBack() : navigate('/'))} className="px-3 py-2 rounded border border-input text-foreground">Back</button>
           </div>
         </form>
       </div>
     </div>
   )
 }
-
