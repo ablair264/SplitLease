@@ -75,3 +75,38 @@ export const computeScoreBreakdown = (vehicle) => {
   }
 }
 
+// DB-aligned scoring (matches insert_lease_offer in queries.sql)
+// v_deal_score := 100 - (((total_cost / p11d) * 100 - 30) * 2), clamped 0..100
+export const computeDbScoreBreakdown = (vehicle) => {
+  const monthly = parseNumeric(vehicle.monthly_rental)
+  const term = Number(vehicle.term || vehicle.term_months || 0) || 0
+  const upfront = parseNumeric(vehicle.upfront || vehicle.upfront_payment || 0)
+  const p11d = parseNumeric(vehicle.p11d || vehicle.p11d_price)
+
+  const totalLeaseCost = monthly * term + upfront
+  let score
+  let costVsValue = null
+  if (p11d > 0) {
+    costVsValue = (totalLeaseCost / p11d) * 100
+    score = 100 - ((costVsValue - 30) * 2)
+    if (score > 100) score = 100
+    if (score < 0) score = 0
+  } else {
+    score = 75
+  }
+  // Round like UI
+  const rounded = Math.round(score * 10) / 10
+  return {
+    score: rounded,
+    inputs: {
+      monthly,
+      term,
+      upfront,
+      p11d,
+    },
+    derived: {
+      totalLeaseCost: Math.round(totalLeaseCost * 100) / 100,
+      totalCostVsP11DPercent: costVsValue != null ? Math.round(costVsValue * 10) / 10 : null,
+    },
+  }
+}

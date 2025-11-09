@@ -5,7 +5,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
 import { Modal } from './ui/modal'
-import { computeScoreBreakdown } from '../lib/scoring'
+import { computeDbScoreBreakdown } from '../lib/scoring'
 
 const BestDealsPage = () => {
   const [deals, setDeals] = useState([])
@@ -23,15 +23,12 @@ const BestDealsPage = () => {
   const [selectedDeal, setSelectedDeal] = useState(null)
 
   const computeBreakdown = (deal) => {
-    // Reuse the same logic as Results (UploadPage)
-    return computeScoreBreakdown({
+    // Align with DB's insert_lease_offer scoring
+    return computeDbScoreBreakdown({
       monthly_rental: deal.best_monthly_rental,
       p11d: deal.p11d_price,
       term: deal.best_term_months,
-      mileage: deal.best_annual_mileage,
-      mpg: deal.mpg,
-      co2: deal.co2_emissions,
-      fuel_type: deal.fuel_type,
+      upfront: deal.best_upfront_payment || 0,
     })
   }
   const [error, setError] = useState('')
@@ -367,24 +364,19 @@ const BreakdownModal = ({ open, onClose, deal }) => {
       <div className="space-y-3 text-sm">
         <div className="grid grid-cols-2 gap-2">
           <div><strong>Monthly:</strong> £{Math.round(b.inputs.monthly).toLocaleString()}</div>
-          <div><strong>Term:</strong> {b.inputs.term} months {b.inputs.defaultsApplied.term && '(default)'}</div>
-          <div><strong>Mileage:</strong> {b.inputs.mileage.toLocaleString()} /yr {b.inputs.defaultsApplied.mileage && '(default)'}</div>
+          <div><strong>Term:</strong> {b.inputs.term} months</div>
+          <div><strong>Upfront:</strong> £{Math.round(b.inputs.upfront || 0).toLocaleString()}</div>
           <div><strong>P11D:</strong> £{Math.round(b.inputs.p11d).toLocaleString()}</div>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>Total lease cost: £{Math.round(b.derived.totalLeaseCost).toLocaleString()}</div>
-          <div>Cost vs P11D: {b.derived.totalCostVsP11DPercent}%</div>
-          <div>Cost per mile (p): {b.derived.costPerMile.toFixed(2)}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>Cost efficiency: {Math.round(b.components.costEfficiencyScore)}/100</div>
-          <div>Mileage allowance: {Math.round(b.components.mileageScore)}/100</div>
-          <div>Fuel efficiency: {Math.round(b.components.fuelScore)}/100</div>
-          <div>Emissions: {Math.round(b.components.emissionsScore)}/100</div>
+          <div>Cost vs P11D: {b.derived.totalCostVsP11DPercent != null ? b.derived.totalCostVsP11DPercent : '—'}%</div>
         </div>
         <div className="mt-2">
-          <span className="font-semibold">Overall score: {b.score}</span>
-          <span className="ml-2 text-xs text-gray-500">weights: cost {Math.round(b.weights.costEfficiency*100)}%, mileage {Math.round(b.weights.mileage*100)}%, fuel {Math.round(b.weights.fuel*100)}%, emissions {Math.round(b.weights.emissions*100)}%</span>
+          <span className="font-semibold">DB Score (0–100): {b.score}</span>
+          {typeof deal.best_deal_score === 'number' && (
+            <span className="ml-2 text-xs text-muted-foreground">(Table shows: {Math.round(deal.best_deal_score)})</span>
+          )}
         </div>
         <div className="mt-4 flex justify-end">
           <button className="px-3 py-1 border rounded" onClick={onClose}>Close</button>
