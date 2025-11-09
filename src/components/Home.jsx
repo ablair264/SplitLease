@@ -89,11 +89,14 @@ const FleetpricesHomepage = ({ onLogin }) => {
     }
   ];
 
+  const placeholderVehicle = 'https://via.placeholder.com/300x200?text=Vehicle'
+  const placeholderCategory = 'https://via.placeholder.com/400x300?text=Category'
+
   const featuredDeals = [
     {
       name: 'Cupra Terramar Hatchback',
       variant: '1.5 eTSI 150 V2 5dr DSG',
-      image: '/api/placeholder/300/200',
+      image: placeholderVehicle,
       price: '224.79',
       initialPayment: '2,021.10',
       processingFee: '349.99',
@@ -116,7 +119,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
     {
       name: 'Jaecoo 7 Estate',
       variant: '1.5T PHEV Luxury 5dr Auto',
-      image: '/api/placeholder/300/200',
+      image: placeholderVehicle,
       price: '285.84',
       initialPayment: '2,572.56',
       processingFee: '349.99',
@@ -139,7 +142,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
     {
       name: 'Omoda 5 Estate',
       variant: '1.6 TGDi [147] Noble 5dr 7DCT',
-      image: '/api/placeholder/300/200',
+      image: placeholderVehicle,
       price: '182.76',
       initialPayment: '1,644.84',
       processingFee: '349.99',
@@ -180,17 +183,17 @@ const FleetpricesHomepage = ({ onLogin }) => {
   const lifestyleCategories = [
     {
       title: 'Family cars',
-      image: '/api/placeholder/400/300',
+      image: placeholderCategory,
       links: ['Compact family cars', 'Popular family cars', 'MPVs and 7+ seaters', 'All family cars']
     },
     {
       title: 'Budget-friendly cars',
-      image: '/api/placeholder/400/300',
+      image: placeholderCategory,
       links: ['Up to £200', 'Up to £250', 'Up to £300', 'All budget-friendly cars']
     },
     {
       title: 'Eco-friendly cars',
-      image: '/api/placeholder/400/300',
+      image: placeholderCategory,
       links: ['Hybrid cars', 'Electric cars', 'All eco-friendly cars']
     }
   ];
@@ -305,7 +308,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
                   <div style={styles.featuresList}>
                     <h4 style={styles.featuresTitle}>Key Features:</h4>
                     <div style={styles.featuresGrid}>
-                      {selectedVehicle.features.map((feature, idx) => (
+                      {(selectedVehicle.features || []).map((feature, idx) => (
                         <div key={idx} style={styles.featureItem}>
                           <Lightbulb size={16} style={{color: '#58f175'}} />
                           <span>{feature}</span>
@@ -548,7 +551,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
             })) : featuredDeals).slice(0,9).map((deal, idx) => (
               <div key={idx} style={styles.dealCard}>
                 <div style={styles.dealBadges}>
-                  {deal.badges.map((badge, bidx) => (
+                  {(deal.badges || []).map((badge, bidx) => (
                     <span key={bidx} style={styles.dealBadge}>{badge}</span>
                   ))}
                 </div>
