@@ -13,12 +13,15 @@ const BestDealsPage = () => {
   const [filters, setFilters] = useState({
     manufacturer: '',
     fuelType: '',
+    bodyStyle: '',
     maxMonthly: '',
     minScore: ''
   })
   const [totalDeals, setTotalDeals] = useState(0)
   const [manufacturers, setManufacturers] = useState([])
   const [fuelTypes, setFuelTypes] = useState([])
+  const [bodyStyles, setBodyStyles] = useState([])
+  const [activeTab, setActiveTab] = useState('cars') // cars | vans
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [selectedDeal, setSelectedDeal] = useState(null)
 
@@ -41,6 +44,9 @@ const BestDealsPage = () => {
       if (resp.success) {
         setManufacturers(resp.manufacturers || [])
         setFuelTypes(resp.fuelTypes || [])
+        // Prefer backend-provided body styles if present; otherwise derive later
+        const backendBodyStyles = resp.bodyStyles || []
+        if (backendBodyStyles.length > 0) setBodyStyles(Array.from(new Set([...backendBodyStyles, 'van'])))
       }
     } catch (e) {
       // Non-fatal for page
@@ -56,6 +62,7 @@ const BestDealsPage = () => {
       const resp = await api.getBestDeals({
         manufacturer: filters.manufacturer || undefined,
         fuelType: filters.fuelType || undefined,
+        bodyStyle: filters.bodyStyle || undefined,
         maxMonthly: filters.maxMonthly || undefined,
         minScore: filters.minScore || undefined,
         limit: 200,
@@ -63,6 +70,11 @@ const BestDealsPage = () => {
       const rows = resp.data || []
       setDeals(rows)
       setTotalDeals(rows.length)
+      // Derive body styles if backend didn't send any or to include actual values present
+      if (rows.length > 0) {
+        const bs = Array.from(new Set(rows.map(r => r.body_style).filter(Boolean)))
+        if (bs.length > 0) setBodyStyles(prev => (prev && prev.length ? prev : Array.from(new Set([...bs, 'van']))))
+      }
     } catch (e) {
       console.error('Error loading best deals:', e)
       setError(e.message)
@@ -90,6 +102,7 @@ const BestDealsPage = () => {
     setFilters({
       manufacturer: '',
       fuelType: '',
+      bodyStyle: '',
       maxMonthly: '',
       minScore: ''
     })
@@ -172,8 +185,8 @@ const BestDealsPage = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-black-100% mb-2">🏆 Best Lease Deals Database</h1>
-          <p className="text-sm text-Contents-Tertiary">Aggregated best prices across all providers</p>
+          <h1 className="text-2xl font-semibold text-black-100% mb-2">🏆 Pricing League</h1>
+          <p className="text-sm text-Contents-Tertiary">Ranked pricing across all providers</p>
           {error && (
             <p className="text-xs text-red-600 mt-1">{error}</p>
           )}
@@ -184,15 +197,26 @@ const BestDealsPage = () => {
         </Button>
       </div>
 
-      {/* Filters Section */}
+      {/* Filters & Tabs Section */}
       <Card className="p-6 mb-8">
         <div className="space-y-4">
+          {/* Tabs */}
+          <div className="flex items-center gap-2">
+            <button
+              className={`px-3 py-1.5 rounded border ${activeTab === 'cars' ? 'bg-amber-400 text-black border-amber-400' : 'border-input text-foreground'}`}
+              onClick={() => setActiveTab('cars')}
+            >Cars</button>
+            <button
+              className={`px-3 py-1.5 rounded border ${activeTab === 'vans' ? 'bg-amber-400 text-black border-amber-400' : 'border-input text-foreground'}`}
+              onClick={() => setActiveTab('vans')}
+            >Vans</button>
+          </div>
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-amber-600" />
             <h3 className="text-lg font-medium">Filter Deals</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Manufacturer:</label>
               <Select 
@@ -215,6 +239,19 @@ const BestDealsPage = () => {
                 <option value="">All Fuel Types</option>
                 {fuelTypes.map(fuel => (
                   <option key={fuel} value={fuel}>{fuel}</option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Body Style:</label>
+              <Select 
+                value={filters.bodyStyle}
+                onChange={(e) => handleFilterChange('bodyStyle', e.target.value)}
+              >
+                <option value="">All Body Styles</option>
+                {bodyStyles.map(bs => (
+                  <option key={bs} value={bs}>{bs}</option>
                 ))}
               </Select>
             </div>
@@ -290,7 +327,7 @@ const BestDealsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-zinc-900 divide-y divide-zinc-800">
-                {deals.map((deal, index) => (
+                {(activeTab === 'vans' ? deals.filter(d => (d.body_style || '').toLowerCase() === 'van') : deals.filter(d => (d.body_style || '').toLowerCase() !== 'van')).map((deal, index) => (
                   <tr key={deal.vehicle_id || index} className="hover:bg-zinc-800/50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
