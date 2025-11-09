@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone'
 import { ArrowLeft, Upload, AlertTriangle, X } from 'lucide-react'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
+import { computeDbScoreBreakdown } from '../lib/scoring'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
@@ -116,22 +117,13 @@ const FileUpload = ({ onBack }) => {
   }
 
   const calculateScore = (vehicleData) => {
-    const monthly = parseFloat(vehicleData.monthly_rental) || 0
-    const p11d = parseFloat(vehicleData.p11d) || 0
-    const term = parseFloat(vehicleData.term) || 36
-
-    if (monthly === 0 || p11d === 0) return 0
-
-    const totalCost = monthly * term
-    const costRatio = (totalCost / p11d) * 100
-
-    if (costRatio <= 30) return 100
-    if (costRatio <= 40) return 90
-    if (costRatio <= 50) return 75
-    if (costRatio <= 60) return 60
-    if (costRatio <= 70) return 40
-    if (costRatio <= 80) return 20
-    return 0
+    const sb = computeDbScoreBreakdown({
+      monthly_rental: vehicleData.monthly_rental,
+      term: vehicleData.term,
+      upfront: vehicleData.upfront,
+      p11d: vehicleData.p11d,
+    })
+    return sb.score || 0
   }
 
   const getScoreCategory = (score) => {
