@@ -36,12 +36,19 @@ export const api = {
     const qs = toQuery(filters)
     return fetchJson(`/api/best-deals${qs ? `?${qs}` : ''}`)
   },
+  getLeaseOffers: (filters = {}) => {
+    const qs = toQuery(filters)
+    return fetchJson(`/api/lease-offers${qs ? `?${qs}` : ''}`)
+  },
   getDashboard: () => fetchJson('/api/dashboard/stats'),
   getRecentUploads: (limit = 10) => fetchJson(`/api/dashboard/activity?limit=${limit}`),
   getTopOffers: (limit = 10) => fetchJson(`/api/dashboard/top-offers?limit=${limit}`),
   // Salary Sacrifice
   getSSCustomers: ({ search = '', sort = 'orders_desc', limit = 100, offset = 0 } = {}) =>
     fetchJson(`/api/ss/customers?search=${encodeURIComponent(search)}&sort=${encodeURIComponent(sort)}&limit=${limit}&offset=${offset}`),
+  createSSCustomer: (payload) => fetchJson('/api/ss/customers', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  }),
   getSSEnquiries: ({ search = '', limit = 100, offset = 0 } = {}) =>
     fetchJson(`/api/ss/enquiries?search=${encodeURIComponent(search)}&limit=${limit}&offset=${offset}`),
   createSSEnquiry: (payload) => fetchJson('/api/ss/enquiries', {

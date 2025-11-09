@@ -5,6 +5,7 @@ import { Input } from './ui/input'
 import { Select } from './ui/select'
 import { Users, CarFront, ClipboardList } from 'lucide-react'
 import { api } from '../lib/api'
+import { Modal } from './ui/modal'
 
 const sampleCustomers = []
 
@@ -15,6 +16,8 @@ export default function SSCustomers() {
   const [rows, setRows] = useState(sampleCustomers)
   const [metrics, setMetrics] = useState({ live_customers: 0, vehicles_delivered: 0, vehicles_ordered: 0 })
   const [loading, setLoading] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [form, setForm] = useState({ name: '', region: '', email: '', phone: '', vehicles_ordered: 0 })
 
   useEffect(() => {
     let cancelled = false
@@ -57,13 +60,14 @@ export default function SSCustomers() {
           <div className="md:col-span-2">
             <Input placeholder="Search by company or email" value={query} onChange={e => setQuery(e.target.value)} />
           </div>
-          <div>
+          <div className="flex gap-2 justify-end">
             <Select value={sort} onChange={e => setSort(e.target.value)}>
               <option value="orders_desc">Orders: High → Low</option>
               <option value="orders_asc">Orders: Low → High</option>
               <option value="newest">Newest → Oldest</option>
               <option value="oldest">Oldest → Newest</option>
             </Select>
+            <Button onClick={() => setShowNew(true)} className="bg-amber-400 text-black hover:bg-amber-500">Add Customer</Button>
           </div>
         </div>
       </Card>
@@ -97,6 +101,32 @@ export default function SSCustomers() {
           </table>
         </div>
       </Card>
+
+      {/* New Customer Modal */}
+      <Modal open={showNew} title="Add Customer">
+        <div className="space-y-3 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input placeholder="Company Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} />
+            <Input placeholder="Region" value={form.region} onChange={e=>setForm({...form, region:e.target.value})} />
+            <Input placeholder="Email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})} />
+            <Input placeholder="Phone" value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})} />
+            <Input placeholder="Vehicles Ordered" type="number" value={form.vehicles_ordered} onChange={e=>setForm({...form, vehicles_ordered: Number(e.target.value||0)})} />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={()=>setShowNew(false)}>Cancel</Button>
+            <Button className="bg-amber-400 text-black hover:bg-amber-500" onClick={async()=>{
+              try{
+                const r = await api.createSSCustomer(form)
+                if(r && r.success){
+                  const reload = await api.getSSCustomers({search: query, sort})
+                  if(reload && reload.success){ setRows(reload.data||[]); setMetrics(reload.metrics||metrics) }
+                  setShowNew(false)
+                }
+              }catch(_){/* ignore */}
+            }}>Save</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

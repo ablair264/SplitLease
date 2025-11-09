@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { DollarSign, Award, BarChart3, Building2, Upload, Users, Briefcase, Tag, ClipboardList, CarFront, FileText } from 'lucide-react'
+import { LayoutDashboard, Award, BarChart3, Building2, Table, Users, Briefcase, Tag, ClipboardList, CarFront, FileText } from 'lucide-react'
 import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
@@ -43,9 +43,9 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
   }
 
   const menuItems = [
-    { id: 'pricing', label: 'Pricing', icon: DollarSign, active: true },
-    { id: 'upload', label: 'Upload', icon: Upload, active: false },
-    { id: 'deals', label: 'Best Deals', icon: Award, active: false },
+    { id: 'pricing', label: 'Dashboard', icon: LayoutDashboard, active: true },
+    { id: 'upload', label: 'Pricing Matrix', icon: Table, active: false },
+    { id: 'deals', label: 'Price Ranking', icon: Award, active: false },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, active: false },
     { id: 'providers', label: 'Providers', icon: Building2, active: false }
   ]

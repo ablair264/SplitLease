@@ -1,7 +1,7 @@
 import MasterLayout from './MasterLayout'
 import DashboardPage from './DashboardPage'
 import BestDealsPage from './BestDealsPage'
-import UploadPage from './UploadPage'
+import PricingMatrixPage from './PricingMatrixPage'
 import SSCustomers from './SSCustomers'
 import SSSales from './SSSales'
 
@@ -11,7 +11,7 @@ const Dashboard = () => {
       case 'pricing':
         return <DashboardPage />
       case 'upload':
-        return <UploadPage />
+        return <PricingMatrixPage />
       case 'deals':
         return <BestDealsPage />
       case 'ss_customers':
