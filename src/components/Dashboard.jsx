@@ -2,6 +2,8 @@ import MasterLayout from './MasterLayout'
 import DashboardPage from './DashboardPage'
 import BestDealsPage from './BestDealsPage'
 import UploadPage from './UploadPage'
+import SSCustomers from './SSCustomers'
+import SSSales from './SSSales'
 
 const Dashboard = () => {
   const renderPage = ({ activePage, setActivePage }) => {
@@ -12,6 +14,10 @@ const Dashboard = () => {
         return <UploadPage />
       case 'deals':
         return <BestDealsPage />
+      case 'ss_customers':
+        return <SSCustomers />
+      case 'ss_sales':
+        return <SSSales />
       case 'analytics':
         return (
           <div className="pt-8 px-7">

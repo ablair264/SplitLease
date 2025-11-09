@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { DollarSign, Award, BarChart3, Building2, Upload } from 'lucide-react'
+import { DollarSign, Award, BarChart3, Building2, Upload, Users, Briefcase, Tag, ClipboardList, CarFront, FileText } from 'lucide-react'
 import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
@@ -51,6 +51,30 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
           {/* Menu Items */}
           <nav className="flex-1 space-y-1">
             {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activePage === item.id
+                    ? 'bg-secondary text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+
+            {/* Salary Sacrifice section header */}
+            <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">Salary Sacrifice</div>
+            {[ 
+              { id: 'ss_customers', label: 'Customers', icon: Users },
+              { id: 'ss_sales', label: 'Sales', icon: Briefcase },
+              { id: 'ss_pricing', label: 'Pricing', icon: Tag },
+              { id: 'ss_orders', label: 'Orders', icon: ClipboardList },
+              { id: 'ss_fleet', label: 'Fleet', icon: CarFront },
+              { id: 'ss_documents', label: 'Documents', icon: FileText },
+            ].map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActivePage(item.id)}
