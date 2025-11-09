@@ -1,9 +1,46 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { DollarSign, Award, BarChart3, Building2, Upload, Users, Briefcase, Tag, ClipboardList, CarFront, FileText } from 'lucide-react'
 import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
-  const [activePage, setActivePage] = useState(currentPage)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [activePage, setActivePageState] = useState(currentPage)
+
+  const routeFor = (id) => {
+    if (id === 'pricing') return '/app'
+    if (id === 'upload') return '/upload'
+    if (id === 'deals') return '/app/deals'
+    if (id === 'ss_customers') return '/app/ss/customers'
+    if (id === 'ss_sales') return '/app/ss/sales'
+    if (id === 'ss_pricing') return '/app/ss/pricing'
+    if (id === 'ss_orders') return '/app/ss/orders'
+    if (id === 'ss_fleet') return '/app/ss/fleet'
+    if (id === 'ss_documents') return '/app/ss/documents'
+    return '/app'
+  }
+
+  const pageFromPath = () => {
+    const p = location.pathname
+    if (p.startsWith('/upload')) return 'upload'
+    if (p.startsWith('/app/deals')) return 'deals'
+    if (p.startsWith('/app/ss/customers')) return 'ss_customers'
+    if (p.startsWith('/app/ss/sales')) return 'ss_sales'
+    if (p.startsWith('/app/ss/pricing')) return 'ss_pricing'
+    if (p.startsWith('/app/ss/orders')) return 'ss_orders'
+    if (p.startsWith('/app/ss/fleet')) return 'ss_fleet'
+    if (p.startsWith('/app/ss/documents')) return 'ss_documents'
+    return 'pricing'
+  }
+
+  useEffect(() => {
+    setActivePageState(pageFromPath())
+  }, [location.pathname])
+
+  const setActivePage = (id) => {
+    navigate(routeFor(id))
+  }
 
   const menuItems = [
     { id: 'pricing', label: 'Pricing', icon: DollarSign, active: true },

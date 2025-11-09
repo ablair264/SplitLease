@@ -1,15 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
 import { Modal } from './ui/modal'
 import { FileText, UserPlus, Download } from 'lucide-react'
+import { api } from '../lib/api'
 
-const initialEnquiries = [
-  { id: 'e1', customerName: 'Acme Ltd', email: 'fleet@acme.co.uk', phone: '0161 000 0000', salesperson: 'Alice', referrer: 'Website', status: 'Draft', notes: '' },
-  { id: 'e2', customerName: 'Globex PLC', email: 'ops@globex.com', phone: '0207 123 4567', salesperson: 'Bob', referrer: 'Partner', status: 'Contacted', notes: 'Left voicemail' },
-]
+const initialEnquiries = []
 
 const statuses = ['Draft', 'Contacted', 'Initial Call', 'Commitment', 'Implementation', 'Pending', 'Live', 'Lost']
 const salespeople = ['Alice', 'Bob', 'Charlie']
@@ -26,18 +24,58 @@ export default function SSSales() {
     primaryName: '', primaryPhone: '', primaryEmail: '', salesperson: salespeople[0], referrer: 'Website', status: 'Draft'
   })
 
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const r = await api.getSSEnquiries({ search: query })
+        if (!cancelled && r && r.success) setEnquiries(r.data || [])
+      } catch (_) {}
+    }
+    load()
+    return () => { cancelled = true }
+  }, [query])
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return enquiries.filter(e => !q || e.customerName.toLowerCase().includes(q) || (e.email||'').toLowerCase().includes(q) || (e.phone||'').toLowerCase().includes(q))
   }, [query, enquiries])
 
-  const addEnquiry = () => {
-    const id = `e${Date.now()}`
-    setEnquiries(prev => [{ id, customerName: form.customerName, email: form.customerEmail, phone: form.customerPhone, salesperson: form.salesperson, referrer: form.referrer, status: form.status, notes: '' }, ...prev])
-    setShowNew(false)
+  const addEnquiry = async () => {
+    try {
+      const payload = {
+        customerName: form.customerName,
+        customerAddress: form.customerAddress,
+        customerPhone: form.customerPhone,
+        customerEmail: form.customerEmail,
+        primaryName: form.primaryName,
+        primaryPhone: form.primaryPhone,
+        primaryEmail: form.primaryEmail,
+        salesperson: form.salesperson,
+        referrer: form.referrer,
+        status: form.status,
+      }
+      const r = await api.createSSEnquiry(payload)
+      if (r && r.success) {
+        const list = await api.getSSEnquiries({ search: '' })
+        if (list && list.success) setEnquiries(list.data || [])
+        setShowNew(false)
+      }
+    } catch (_) {}
   }
 
-  const reportRows = useMemo(() => enquiries.filter(e => e.salesperson === reportSalesperson), [enquiries, reportSalesperson])
+  const [reportRows, setReportRows] = useState([])
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const r = await api.getSSReport(reportSalesperson)
+        if (!cancelled && r && r.success) setReportRows(r.data || [])
+      } catch (_) {}
+    }
+    if (showReport) load()
+    return () => { cancelled = true }
+  }, [reportSalesperson, showReport])
 
   return (
     <div className="pt-8 px-7 space-y-6">
@@ -154,4 +192,3 @@ export default function SSSales() {
     </div>
   )
 }
-

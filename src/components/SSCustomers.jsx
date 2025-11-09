@@ -1,42 +1,46 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
 import { Users, CarFront, ClipboardList } from 'lucide-react'
+import { api } from '../lib/api'
 
-const sampleCustomers = [
-  { id: 'c1', name: 'Acme Ltd', region: 'North West', vehiclesOrdered: 12, email: 'fleet@acme.co.uk' },
-  { id: 'c2', name: 'Globex PLC', region: 'South East', vehiclesOrdered: 7, email: 'ops@globex.com' },
-  { id: 'c3', name: 'Initech', region: 'Midlands', vehiclesOrdered: 19, email: 'contact@initech.co.uk' },
-  { id: 'c4', name: 'Umbrella Corp', region: 'Scotland', vehiclesOrdered: 4, email: 'fleet@umbrella.com' },
-]
+const sampleCustomers = []
 
 export default function SSCustomers() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('orders_desc')
 
-  const liveCustomers = sampleCustomers.length
-  const vehiclesDelivered = 23 // placeholder
-  const vehiclesOrdered = sampleCustomers.reduce((s, c) => s + (c.vehiclesOrdered || 0), 0)
+  const [rows, setRows] = useState(sampleCustomers)
+  const [metrics, setMetrics] = useState({ live_customers: 0, vehicles_delivered: 0, vehicles_ordered: 0 })
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        setLoading(true)
+        const r = await api.getSSCustomers({ search: query, sort })
+        if (!cancelled && r && r.success) {
+          setRows(r.data || [])
+          setMetrics(r.metrics || { live_customers: 0, vehicles_delivered: 0, vehicles_ordered: 0 })
+        }
+      } catch (e) { /* ignore */ } finally { if (!cancelled) setLoading(false) }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [query, sort])
+
+  const liveCustomers = metrics.live_customers
+  const vehiclesDelivered = metrics.vehicles_delivered
+  const vehiclesOrdered = metrics.vehicles_ordered
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let rows = sampleCustomers.filter(c => !q || c.name.toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))
-    switch (sort) {
-      case 'orders_asc':
-        rows = rows.sort((a, b) => (a.vehiclesOrdered||0) - (b.vehiclesOrdered||0)); break
-      case 'newest':
-        rows = rows.slice() // placeholder, would sort by created_at desc
-        break
-      case 'oldest':
-        rows = rows.slice()
-        break
-      default:
-        rows = rows.sort((a, b) => (b.vehiclesOrdered||0) - (a.vehiclesOrdered||0))
-    }
-    return rows
-  }, [query, sort])
+    const filtered = rows.filter(c => !q || c.name.toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))
+    return filtered
+  }, [query, sort, rows])
 
   return (
     <div className="pt-8 px-7 space-y-6">
@@ -81,7 +85,7 @@ export default function SSCustomers() {
                 <tr key={row.id} className="hover:bg-secondary/40">
                   <td className="px-6 py-3 whitespace-nowrap text-foreground">{row.name}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-foreground">{row.region}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-foreground">{row.vehiclesOrdered}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-foreground">{row.vehicles_ordered || 0}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-right">
                     <Button variant="outline" className="mr-2">View Customer</Button>
                     <Button variant="outline" className="mr-2">View Orders</Button>
@@ -108,4 +112,3 @@ function MetricCard({ icon: Icon, title, value, color }) {
     </Card>
   )
 }
-

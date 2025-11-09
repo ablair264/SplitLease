@@ -39,6 +39,15 @@ export const api = {
   getDashboard: () => fetchJson('/api/dashboard/stats'),
   getRecentUploads: (limit = 10) => fetchJson(`/api/dashboard/activity?limit=${limit}`),
   getTopOffers: (limit = 10) => fetchJson(`/api/dashboard/top-offers?limit=${limit}`),
+  // Salary Sacrifice
+  getSSCustomers: ({ search = '', sort = 'orders_desc', limit = 100, offset = 0 } = {}) =>
+    fetchJson(`/api/ss/customers?search=${encodeURIComponent(search)}&sort=${encodeURIComponent(sort)}&limit=${limit}&offset=${offset}`),
+  getSSEnquiries: ({ search = '', limit = 100, offset = 0 } = {}) =>
+    fetchJson(`/api/ss/enquiries?search=${encodeURIComponent(search)}&limit=${limit}&offset=${offset}`),
+  createSSEnquiry: (payload) => fetchJson('/api/ss/enquiries', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  }),
+  getSSReport: (salesperson) => fetchJson(`/api/ss/enquiries/report?salesperson=${encodeURIComponent(salesperson)}`),
   search: (q, limit = 20) => fetchJson(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy }) => {
     const form = new FormData()
