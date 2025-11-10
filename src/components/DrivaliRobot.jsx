@@ -3,34 +3,48 @@ import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Select } from './ui/select'
-import { Textarea } from './ui/textarea'
-import { Bot, Car, Clock, CheckCircle, XCircle, Play } from 'lucide-react'
-import { api } from '../lib/api'
+import VehicleSelector from './VehicleSelector'
+import { Bot, Clock, CheckCircle, XCircle, Play, Download, Eye } from 'lucide-react'
+import { drivaliaService } from '../lib/supabase'
 
 export default function DrivaliRobot() {
+  const [selectedVehicles, setSelectedVehicles] = useState([])
   const [jobConfig, setJobConfig] = useState({
-    vehicles: '',
     terms: 'ALL',
     mileages: 'ALL',
     maintenance: false,
     deposit: 0
   })
-  
+
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [viewingResults, setViewingResults] = useState(null)
 
   useEffect(() => {
     loadJobs()
+
+    // Subscribe to job updates
+    const subscription = drivaliaService.subscribeToJobs((payload) => {
+      if (payload.eventType === 'INSERT') {
+        setJobs(prev => [payload.new, ...prev])
+      } else if (payload.eventType === 'UPDATE') {
+        setJobs(prev => prev.map(job =>
+          job.id === payload.new.id ? payload.new : job
+        ))
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const loadJobs = async () => {
     try {
       setLoading(true)
-      const response = await api.getDrivaliaJobs()
-      if (response?.success) {
-        setJobs(response.data || [])
-      }
+      const data = await drivaliaService.getJobs()
+      setJobs(data || [])
     } catch (error) {
       console.error('Failed to load jobs:', error)
     } finally {
@@ -39,55 +53,91 @@ export default function DrivaliRobot() {
   }
 
   const handleSubmitJob = async () => {
-    if (!jobConfig.vehicles.trim()) {
-      alert('Please enter vehicle specifications')
+    if (selectedVehicles.length === 0) {
+      alert('Please select at least one vehicle')
       return
     }
 
     try {
       setSubmitting(true)
-      const vehicles = jobConfig.vehicles.split('\n').map(line => {
-        const parts = line.trim().split(/[,\t]/)
-        if (parts.length >= 3) {
-          return {
-            make: parts[0].trim(),
-            model: parts[1].trim(),
-            variant: parts[2].trim()
-          }
-        }
-        return null
-      }).filter(Boolean)
 
-      if (vehicles.length === 0) {
-        alert('Please enter valid vehicle specifications (Make, Model, Variant)')
-        return
-      }
+      const job = await drivaliaService.createJob(selectedVehicles, jobConfig)
 
-      const response = await api.submitDrivaliaJob({
-        vehicles,
-        config: {
-          terms: jobConfig.terms,
-          mileages: jobConfig.mileages,
-          maintenance: jobConfig.maintenance,
-          deposit: jobConfig.deposit
-        }
+      alert(`Job #${job.id} submitted successfully!`)
+
+      // Reset form
+      setSelectedVehicles([])
+      setJobConfig({
+        terms: 'ALL',
+        mileages: 'ALL',
+        maintenance: false,
+        deposit: 0
       })
 
-      if (response?.success) {
-        setJobConfig({
-          vehicles: '',
-          terms: 'ALL',
-          mileages: 'ALL',
-          maintenance: false,
-          deposit: 0
-        })
-        loadJobs()
-      }
+      // Reload jobs
+      loadJobs()
+
     } catch (error) {
       console.error('Failed to submit job:', error)
       alert('Failed to submit job. Please try again.')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleViewResults = async (jobId) => {
+    try {
+      const quotes = await drivaliaService.getJobQuotes(jobId)
+      setViewingResults({ jobId, quotes })
+    } catch (error) {
+      console.error('Failed to load results:', error)
+      alert('Failed to load results')
+    }
+  }
+
+  const handleDownloadExcel = async (jobId) => {
+    try {
+      const quotes = await drivaliaService.getJobQuotes(jobId)
+
+      if (quotes.length === 0) {
+        alert('No quotes available to download')
+        return
+      }
+
+      // Convert to CSV (simple Excel-compatible format)
+      const headers = ['Manufacturer', 'Model', 'Variant', 'Term', 'Mileage', 'Monthly Rental', 'Initial Payment', 'Total Cost', 'Maintenance', 'Supplier']
+      const rows = quotes.map(q => [
+        q.manufacturer,
+        q.model,
+        q.variant,
+        q.term,
+        q.mileage,
+        q.monthly_rental || '',
+        q.initial_payment || '',
+        q.total_cost || '',
+        q.maintenance_included ? 'Yes' : 'No',
+        q.supplier_name || ''
+      ])
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n')
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `drivalia-job-${jobId}-results.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+    } catch (error) {
+      console.error('Failed to download results:', error)
+      alert('Failed to download results')
     }
   }
 
@@ -118,23 +168,13 @@ export default function DrivaliRobot() {
       {/* Job Configuration */}
       <Card className="p-6 bg-card border border-border">
         <h2 className="text-lg font-semibold text-foreground mb-4">New Quote Job</h2>
-        
+
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Vehicle List (one per line: Make, Model, Variant)
-            </label>
-            <Textarea
-              placeholder="BMW, 1 SERIES, 116d 5dr&#10;AUDI, A3, 30 TFSI&#10;MERCEDES, A-CLASS, A180"
-              value={jobConfig.vehicles}
-              onChange={(e) => setJobConfig({...jobConfig, vehicles: e.target.value})}
-              rows={6}
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Format: Make, Model, Variant (separated by commas or tabs)
-            </p>
-          </div>
+          {/* Vehicle Selector with Cascading Dropdowns */}
+          <VehicleSelector
+            selectedVehicles={selectedVehicles}
+            onVehiclesChange={setSelectedVehicles}
+          />
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
@@ -193,13 +233,13 @@ export default function DrivaliRobot() {
           </div>
 
           <div className="flex justify-end">
-            <Button 
+            <Button
               onClick={handleSubmitJob}
-              disabled={submitting || !jobConfig.vehicles.trim()}
+              disabled={submitting || selectedVehicles.length === 0}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               <Play className="w-4 h-4 mr-2" />
-              {submitting ? 'Submitting...' : 'Start Quote Job'}
+              {submitting ? 'Submitting...' : `Start Quote Job (${selectedVehicles.length} vehicles)`}
             </Button>
           </div>
         </div>
@@ -247,18 +287,20 @@ export default function DrivaliRobot() {
                 
                 {job.status === 'completed' && (
                   <div className="mt-3 flex gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => api.downloadDrivaliaResults(job.id)}
+                      onClick={() => handleDownloadExcel(job.id)}
                     >
-                      Download Excel
+                      <Download className="w-4 h-4 mr-1" />
+                      Download CSV
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
-                      onClick={() => api.viewDrivaliaResults(job.id)}
+                      onClick={() => handleViewResults(job.id)}
                     >
+                      <Eye className="w-4 h-4 mr-1" />
                       View Results
                     </Button>
                   </div>
@@ -274,6 +316,69 @@ export default function DrivaliRobot() {
           </div>
         )}
       </Card>
+
+      {/* Results Display */}
+      {viewingResults && (
+        <Card className="p-6 bg-card border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">
+              Job #{viewingResults.jobId} Results ({viewingResults.quotes.length} quotes)
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewingResults(null)}
+            >
+              Close
+            </Button>
+          </div>
+
+          {viewingResults.quotes.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">No quotes available yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border">
+                  <tr className="text-left">
+                    <th className="p-2 font-medium text-foreground">Manufacturer</th>
+                    <th className="p-2 font-medium text-foreground">Model</th>
+                    <th className="p-2 font-medium text-foreground">Variant</th>
+                    <th className="p-2 font-medium text-foreground">Term</th>
+                    <th className="p-2 font-medium text-foreground">Mileage</th>
+                    <th className="p-2 font-medium text-foreground">Monthly</th>
+                    <th className="p-2 font-medium text-foreground">Initial</th>
+                    <th className="p-2 font-medium text-foreground">Total</th>
+                    <th className="p-2 font-medium text-foreground">Maint.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewingResults.quotes.map((quote, idx) => (
+                    <tr key={idx} className="border-b border-border hover:bg-secondary/20">
+                      <td className="p-2 text-foreground">{quote.manufacturer}</td>
+                      <td className="p-2 text-foreground">{quote.model}</td>
+                      <td className="p-2 text-foreground text-xs">{quote.variant}</td>
+                      <td className="p-2 text-foreground">{quote.term}m</td>
+                      <td className="p-2 text-foreground">{quote.mileage.toLocaleString()}</td>
+                      <td className="p-2 text-foreground font-semibold">
+                        £{quote.monthly_rental?.toFixed(2) || 'N/A'}
+                      </td>
+                      <td className="p-2 text-foreground">
+                        £{quote.initial_payment?.toFixed(2) || 'N/A'}
+                      </td>
+                      <td className="p-2 text-foreground">
+                        £{quote.total_cost?.toFixed(2) || 'N/A'}
+                      </td>
+                      <td className="p-2 text-foreground">
+                        {quote.maintenance_included ? '✓' : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   )
 }
