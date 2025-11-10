@@ -124,7 +124,11 @@ export const drivaliaService = {
       .from('drivalia_quotes')
       .select('*')
       .eq('job_id', jobId)
-      .order('make, model, variant, term, mileage')
+      .order('manufacturer', { ascending: true })
+      .order('model', { ascending: true })
+      .order('variant', { ascending: true })
+      .order('term', { ascending: true })
+      .order('mileage', { ascending: true })
 
     if (error) throw error
     return data
