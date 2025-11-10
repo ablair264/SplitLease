@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Award, BarChart3, Building2, Table, Users, Briefcase, Tag, ClipboardList, CarFront, FileText } from 'lucide-react'
+import { LayoutDashboard, Award, BarChart3, Building2, Table, Users, Briefcase, Tag, ClipboardList, CarFront, FileText, Bot } from 'lucide-react'
 import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
@@ -18,6 +18,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     if (id === 'ss_orders') return '/app/ss/orders'
     if (id === 'ss_fleet') return '/app/ss/fleet'
     if (id === 'ss_documents') return '/app/ss/documents'
+    if (id === 'robo_drivalia') return '/app/robo/drivalia'
     return '/app'
   }
 
@@ -31,6 +32,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     if (p.startsWith('/app/ss/orders')) return 'ss_orders'
     if (p.startsWith('/app/ss/fleet')) return 'ss_fleet'
     if (p.startsWith('/app/ss/documents')) return 'ss_documents'
+    if (p.startsWith('/app/robo/drivalia')) return 'robo_drivalia'
     return 'pricing'
   }
 
@@ -111,6 +113,25 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
               { id: 'ss_orders', label: 'Orders', icon: ClipboardList },
               { id: 'ss_fleet', label: 'Fleet', icon: CarFront },
               { id: 'ss_documents', label: 'Documents', icon: FileText },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activePage === item.id
+                    ? 'bg-secondary text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+
+            {/* RoboPrice section header */}
+            <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">RoboPrice</div>
+            {[ 
+              { id: 'robo_drivalia', label: 'Drivalia', icon: Bot },
             ].map((item) => (
               <button
                 key={item.id}

@@ -4,6 +4,7 @@ import BestDealsPage from './BestDealsPage'
 import PricingMatrixPage from './PricingMatrixPage'
 import SSCustomers from './SSCustomers'
 import SSSales from './SSSales'
+import DrivaliRobot from './DrivaliRobot'
 
 const Dashboard = () => {
   const renderPage = ({ activePage, setActivePage }) => {
@@ -18,6 +19,8 @@ const Dashboard = () => {
         return <SSCustomers />
       case 'ss_sales':
         return <SSSales />
+      case 'robo_drivalia':
+        return <DrivaliRobot />
       case 'analytics':
         return (
           <div className="pt-8 px-7">

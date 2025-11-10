@@ -27,6 +27,7 @@ function App() {
           <Route path="/app/ss/orders" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/app/ss/fleet" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/app/ss/documents" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/app/robo/drivalia" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/upload" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

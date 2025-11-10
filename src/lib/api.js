@@ -81,4 +81,18 @@ export const api = {
     body: JSON.stringify({ providerName, fieldMappings, headerNames }),
   }),
   refreshCache: () => fetchJson('/api/refresh-cache', { method: 'POST' }),
+  
+  // Drivalia Automation
+  getDrivaliaJobs: () => fetchJson('/api/drivalia/jobs'),
+  submitDrivaliaJob: (payload) => fetchJson('/api/drivalia/jobs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }),
+  getDrivaliaJobResults: (jobId) => fetchJson(`/api/drivalia/jobs/${jobId}/results`),
+  downloadDrivaliaResults: async (jobId) => {
+    const url = `${API_BASE_URL}/api/drivalia/jobs/${jobId}/download`
+    window.open(url, '_blank')
+  },
+  viewDrivaliaResults: (jobId) => fetchJson(`/api/drivalia/jobs/${jobId}/results`),
 }
