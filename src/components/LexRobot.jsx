@@ -1,19 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { api } from '../lib/api'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
-import { Bot, RefreshCw, Play, Download } from 'lucide-react'
+import { Bot, RefreshCw, Play, Download, X, Loader2 } from 'lucide-react'
 
 export default function LexRobot() {
   const [vehicles, setVehicles] = useState([])
   const [stats, setStats] = useState({ total: 0, withCodes: 0, withoutCodes: 0 })
   const [quoteRequests, setQuoteRequests] = useState([])
   const [processing, setProcessing] = useState(false)
+  const [progressStatus, setProgressStatus] = useState('')
   const [results, setResults] = useState([])
+  const pollingRef = useRef(null)
 
   useEffect(() => {
     reloadAll()
+    // Cleanup polling on unmount
+    return () => {
+      if (pollingRef.current) {
+        clearTimeout(pollingRef.current)
+      }
+    }
   }, [])
 
   const reloadAll = async () => {
@@ -90,8 +98,18 @@ export default function LexRobot() {
     return expanded
   }
 
+  const cancelProcessing = () => {
+    if (pollingRef.current) {
+      clearTimeout(pollingRef.current)
+      pollingRef.current = null
+    }
+    setProcessing(false)
+    setProgressStatus('')
+  }
+
   const fetchPricing = async () => {
     setProcessing(true)
+    setProgressStatus('Submitting job to backend...')
     setResults([])
     try {
       // Submit as a backend job; backend worker will process with Puppeteer
@@ -115,38 +133,53 @@ export default function LexRobot() {
       }
       const { data } = await api.submitLexJob(payload)
       const jobId = data.id
+      setProgressStatus('Job submitted. Waiting for worker to process...')
+
       // Poll results periodically
       const poll = async () => {
         try {
           const jobsResp = await api.getLexJobs()
           const job = (jobsResp.data || []).find(j => j.id === jobId)
-          if (job && job.status === 'completed') {
-            const res = await api.getLexJobResults(jobId)
-            // Map to UI results table minimal shape
-            const mapped = (res.data || []).map(q => ({
-              manufacturer: q.manufacturer,
-              model: q.model,
-              variant: q.variant,
-              term: q.term,
-              mileage: q.mileage,
-              monthlyRental: q.monthly_rental,
-              initialRental: q.initial_rental,
-              totalCost: q.total_cost,
-              co2: q.co2,
-              fuelType: q.fuel_type,
-              p11d: q.p11d,
-              success: true
-            }))
-            setResults(mapped)
-            setProcessing(false)
-            return
+          if (job) {
+            if (job.status === 'completed') {
+              setProgressStatus('Job completed! Loading results...')
+              const res = await api.getLexJobResults(jobId)
+              // Map to UI results table minimal shape
+              const mapped = (res.data || []).map(q => ({
+                manufacturer: q.manufacturer,
+                model: q.model,
+                variant: q.variant,
+                term: q.term,
+                mileage: q.mileage,
+                monthlyRental: q.monthly_rental,
+                initialRental: q.initial_rental,
+                totalCost: q.total_cost,
+                co2: q.co2,
+                fuelType: q.fuel_type,
+                p11d: q.p11d,
+                success: true
+              }))
+              setResults(mapped)
+              setProcessing(false)
+              setProgressStatus('')
+              return
+            } else if (job.status === 'processing') {
+              setProgressStatus(`Processing quotes... (${job.metadata?.successCount || 0} completed)`)
+            } else if (job.status === 'failed') {
+              setProgressStatus('Job failed. Check logs.')
+              setProcessing(false)
+              return
+            }
           }
-        } catch (_) {}
-        setTimeout(poll, 2000)
+        } catch (_) {
+          setProgressStatus('Checking job status...')
+        }
+        pollingRef.current = setTimeout(poll, 2000)
       }
       poll()
     } catch (e) {
       setProcessing(false)
+      setProgressStatus('')
       alert(e.message)
     }
   }
@@ -277,7 +310,7 @@ export default function LexRobot() {
                       <div className="text-xs text-muted-foreground max-w-md truncate">{r.variant}</div>
                     </td>
                     <td className="p-2">
-                      <select multiple className="w-32 p-1 border border-border rounded text-xs h-20"
+                      <select multiple className="w-32 p-1 border border-border rounded text-xs h-20 bg-background text-foreground"
                         value={r.terms}
                         onChange={(e) => {
                           const vals = Array.from(e.target.selectedOptions, o => o.value)
@@ -292,7 +325,7 @@ export default function LexRobot() {
                       </select>
                     </td>
                     <td className="p-2">
-                      <select multiple className="w-32 p-1 border border-border rounded text-xs h-20"
+                      <select multiple className="w-32 p-1 border border-border rounded text-xs h-20 bg-background text-foreground"
                         value={r.mileages}
                         onChange={(e) => {
                           const vals = Array.from(e.target.selectedOptions, o => o.value)
@@ -312,7 +345,7 @@ export default function LexRobot() {
                     </td>
                     <td className="p-2">
                       <select
-                        className="w-32 p-1 border border-border rounded text-xs"
+                        className="w-32 p-1 border border-border rounded text-xs bg-background text-foreground"
                         value={r.discountType}
                         onChange={(e) => updateRequest(r.id, 'discountType', e.target.value)}
                       >
@@ -324,7 +357,7 @@ export default function LexRobot() {
                           type="number"
                           step="0.1"
                           placeholder="%"
-                          className="mt-1 w-32 p-1 border border-border rounded text-xs"
+                          className="mt-1 w-32 p-1 border border-border rounded text-xs bg-background text-foreground"
                           value={r.discountPercent || ''}
                           onChange={(e) => updateRequest(r.id, 'discountPercent', e.target.value)}
                         />
@@ -359,6 +392,29 @@ export default function LexRobot() {
             </Button>
           )}
         </div>
+
+        {processing && (
+          <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                <div>
+                  <div className="font-medium text-foreground">Processing Quote Request</div>
+                  <div className="text-sm text-muted-foreground">{progressStatus}</div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={cancelProcessing}
+                className="border-red-500/20 text-red-500 hover:bg-red-500/10"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {results.length > 0 && (
