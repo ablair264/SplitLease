@@ -894,9 +894,10 @@ const UploadPage = ({ embedded = false }) => {
           )}
             <div 
               {...getRootProps()}
-              className={`self-stretch h-40 p-6 rounded-xl border border-input flex flex-col justify-center items-center gap-5 cursor-pointer transition-colors ${
+              className={[
+                'self-stretch h-40 p-6 rounded-xl border border-input flex flex-col justify-center items-center gap-5 cursor-pointer transition-colors',
                 isDragActive ? 'border-amber-400 bg-amber-50' : 'bg-zinc-700 bg-opacity-20 hover:bg-opacity-30'
-              }`}
+              ].join(' ')}
             >
               <input {...getInputProps()} />
               <div className="p-2.5 bg-Primary-50 rounded-full flex justify-center items-center">
