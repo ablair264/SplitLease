@@ -918,7 +918,6 @@ const UploadPage = ({ embedded = false }) => {
               </div>
             )}
           </div>
-        </div>
       )
     }
 
