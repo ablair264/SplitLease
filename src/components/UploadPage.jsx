@@ -864,15 +864,23 @@ const UploadPage = ({ embedded = false }) => {
     if (uploadState === 'idle') {
       return (
         <div className="flex flex-col justify-start items-start gap-8">
-          <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
-            <div className="flex justify-start items-center gap-1">
-              <div className="flex-1 flex justify-start items-center gap-0.5">
-                <div className="text-Contents-Primary text-2xl font-semibold font-inter leading-8">Upload Ratebook</div>
+          {!embedded && (
+            <div className="self-stretch flex flex-col justify-start items-start gap-1.5">
+              <div className="flex justify-start items-center gap-1">
+                <div className="flex-1 flex justify-start items-center gap-0.5">
+                  <div className="text-Contents-Primary text-2xl font-semibold font-inter leading-8">Upload Ratebook</div>
+                </div>
+              </div>
+              <div className="w-full max-w-2xl text-Contents-Tertiary text-xs font-light font-avenir leading-6 tracking-wide">
+                Upload a rate book from any provider and then use the dropdown menus to match the fields together.
               </div>
             </div>
-            <div className="w-full max-w-2xl text-Contents-Tertiary text-xs font-light font-avenir leading-6 tracking-wide">
+          )}
+          {embedded && (
+            <div className="w-full max-w-2xl text-Contents-Tertiary text-sm font-light font-avenir leading-6 tracking-wide mb-4">
               Upload a rate book from any provider and then use the dropdown menus to match the fields together.
             </div>
+          )}
             <div 
               {...getRootProps()}
               className={`self-stretch h-40 p-6 rounded-xl border border-input flex flex-col justify-center items-center gap-5 cursor-pointer transition-colors ${
