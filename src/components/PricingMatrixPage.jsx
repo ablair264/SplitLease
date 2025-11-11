@@ -17,7 +17,8 @@ const PricingMatrixPage = () => {
     fuelType: '',
     bodyStyle: '',
     maxMonthly: '',
-    minScore: ''
+    minScore: '',
+    search: ''
   })
   const [totalOffers, setTotalOffers] = useState(0)
   const [manufacturers, setManufacturers] = useState([])
@@ -46,11 +47,11 @@ const PricingMatrixPage = () => {
       
       // Extract unique values for filters
       if (rows.length > 0) {
-        const uniqueManufacturers = Array.from(new Set(rows.map(r => r.manufacturer).filter(Boolean)))
-        const uniqueProviders = Array.from(new Set(rows.map(r => r.provider_name).filter(Boolean)))
-        const uniqueFuelTypes = Array.from(new Set(rows.map(r => r.fuel_type).filter(Boolean)))
-        const uniqueBodyStyles = Array.from(new Set(rows.map(r => r.body_style).filter(Boolean)))
-        
+        const uniqueManufacturers = Array.from(new Set(rows.map(r => r.manufacturer).filter(Boolean))).sort()
+        const uniqueProviders = Array.from(new Set(rows.map(r => r.best_provider_name).filter(Boolean))).sort()
+        const uniqueFuelTypes = Array.from(new Set(rows.map(r => r.fuel_type).filter(Boolean))).sort()
+        const uniqueBodyStyles = Array.from(new Set(rows.map(r => r.body_style).filter(Boolean))).sort()
+
         setManufacturers(uniqueManufacturers)
         setProviders(uniqueProviders)
         setFuelTypes(uniqueFuelTypes)
@@ -84,7 +85,8 @@ const PricingMatrixPage = () => {
       fuelType: '',
       bodyStyle: '',
       maxMonthly: '',
-      minScore: ''
+      minScore: '',
+      search: ''
     })
   }
 
@@ -97,6 +99,40 @@ const PricingMatrixPage = () => {
     const num = parseFloat(value)
     return isNaN(num) ? '0' : num.toLocaleString()
   }
+
+  // Filter offers client-side
+  const filteredOffers = offers.filter(offer => {
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      const matchesSearch =
+        (offer.manufacturer || '').toLowerCase().includes(searchLower) ||
+        (offer.model || '').toLowerCase().includes(searchLower) ||
+        (offer.variant || '').toLowerCase().includes(searchLower) ||
+        (offer.cap_code || '').toLowerCase().includes(searchLower)
+      if (!matchesSearch) return false
+    }
+
+    // Manufacturer filter
+    if (filters.manufacturer && offer.manufacturer !== filters.manufacturer) return false
+
+    // Provider filter
+    if (filters.provider && offer.best_provider_name !== filters.provider) return false
+
+    // Fuel Type filter
+    if (filters.fuelType && offer.fuel_type !== filters.fuelType) return false
+
+    // Body Style filter
+    if (filters.bodyStyle && offer.body_style !== filters.bodyStyle) return false
+
+    // Max Monthly filter
+    if (filters.maxMonthly && offer.best_monthly_rental > parseFloat(filters.maxMonthly)) return false
+
+    // Min Score filter
+    if (filters.minScore && (offer.best_deal_score || 0) < parseFloat(filters.minScore)) return false
+
+    return true
+  })
 
   const getScoreColor = (score) => {
     if (score >= 90) return '#10B981'
@@ -193,11 +229,21 @@ const PricingMatrixPage = () => {
             <h3 className="text-lg font-medium">Filter Offers</h3>
           </div>
           
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Search:</label>
+            <Input
+              type="text"
+              placeholder="Search by manufacturer, model, variant, or CAP code..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Manufacturer:</label>
-              <Select 
-                value={filters.manufacturer} 
+              <Select
+                value={filters.manufacturer}
                 onChange={(e) => handleFilterChange('manufacturer', e.target.value)}
               >
                 <option value="">All Manufacturers</option>
@@ -209,8 +255,8 @@ const PricingMatrixPage = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Provider:</label>
-              <Select 
-                value={filters.provider} 
+              <Select
+                value={filters.provider}
                 onChange={(e) => handleFilterChange('provider', e.target.value)}
               >
                 <option value="">All Providers</option>
@@ -222,8 +268,8 @@ const PricingMatrixPage = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Fuel Type:</label>
-              <Select 
-                value={filters.fuelType} 
+              <Select
+                value={filters.fuelType}
                 onChange={(e) => handleFilterChange('fuelType', e.target.value)}
               >
                 <option value="">All Fuel Types</option>
@@ -235,7 +281,7 @@ const PricingMatrixPage = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Body Style:</label>
-              <Select 
+              <Select
                 value={filters.bodyStyle}
                 onChange={(e) => handleFilterChange('bodyStyle', e.target.value)}
               >
@@ -248,8 +294,8 @@ const PricingMatrixPage = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Max Monthly (£):</label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 placeholder="e.g. 500"
                 value={filters.maxMonthly}
                 onChange={(e) => handleFilterChange('maxMonthly', e.target.value)}
@@ -258,8 +304,8 @@ const PricingMatrixPage = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">Min Score:</label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 placeholder="e.g. 70"
                 value={filters.minScore}
                 onChange={(e) => handleFilterChange('minScore', e.target.value)}
@@ -275,14 +321,14 @@ const PricingMatrixPage = () => {
               Clear Filters
             </Button>
             <div className="text-sm text-muted-foreground">
-              <strong>{totalOffers}</strong> offers found
+              <strong>{filteredOffers.length}</strong> of <strong>{totalOffers}</strong> offers shown
             </div>
           </div>
         </div>
       </Card>
 
       {/* Results */}
-      {offers.length === 0 ? (
+      {filteredOffers.length === 0 ? (
         <Card className="p-12 text-center bg-zinc-900 border border-zinc-800 text-foreground">
           <h3 className="text-xl font-semibold mb-2">No offers found</h3>
           <p className="text-muted-foreground">Try adjusting your filters or upload some rate sheets first.</p>
@@ -320,7 +366,7 @@ const PricingMatrixPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-zinc-900 divide-y divide-zinc-800">
-                {offers.map((offer, index) => (
+                {filteredOffers.map((offer, index) => (
                   <tr key={offer.id || index} className="hover:bg-zinc-800/50">
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div>
