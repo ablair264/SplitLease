@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard'
 import FileUpload from './components/FileUpload'
 import Home from './components/Home'
 import Login from './components/Login'
+import FleetFlexPage from './components/FleetFlexPage'
 import './App.css'
 
 const isAuthed = () => Boolean(localStorage.getItem('auth_user'))
@@ -18,6 +19,7 @@ function App() {
       <div className="min-h-screen bg-background">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/salary-sacrifice" element={<FleetFlexPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/app/deals" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

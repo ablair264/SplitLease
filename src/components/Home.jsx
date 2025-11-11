@@ -39,6 +39,29 @@ const FleetpricesHomepage = ({ onLogin }) => {
   const [bestDeals, setBestDeals] = useState([])
   const [loadingDeals, setLoadingDeals] = useState(true)
   const [error, setError] = useState('')
+  const [filters, setFilters] = useState({
+    manufacturer: '',
+    fuelType: '',
+    bodyType: '',
+    maxBudget: ''
+  })
+  const [manufacturers, setManufacturers] = useState([])
+  const [fuelTypes, setFuelTypes] = useState([])
+  const [bodyTypes, setBodyTypes] = useState([])
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  const carouselImages = [
+    '/cars/2024_Nissan_Qashqai_e-Power_IMG_1150.jpg',
+    '/cars/nissan-qashqai-2024-n-design-front-fuji-sunset-red-with-pearl-black-roof.avif',
+    '/cars/a6-etron-cutout.png'
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
+    }, 5000) // Change slide every 5 seconds
+    return () => clearInterval(interval)
+  }, [])
 
   const toggleDropdown = (dropdown) => {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
@@ -55,40 +78,46 @@ const FleetpricesHomepage = ({ onLogin }) => {
   };
 
   const navItems = [
-    { 
-      id: 'car-leasing', 
-      label: 'Car leasing', 
+    {
+      id: 'car-leasing',
+      label: 'Car leasing',
       icon: Car,
-      hasDropdown: true 
+      hasDropdown: true
     },
-    { 
-      id: 'van-leasing', 
-      label: 'Van leasing', 
+    {
+      id: 'van-leasing',
+      label: 'Van leasing',
       icon: Truck,
-      hasDropdown: true 
+      hasDropdown: true
     },
-    { 
-      id: 'managers-specials', 
-      label: "Manager's specials", 
+    {
+      id: 'managers-specials',
+      label: "Manager's specials",
       icon: Star
     },
-    { 
-      id: 'electric-specials', 
-      label: 'Electric specials', 
+    {
+      id: 'electric-specials',
+      label: 'Electric specials',
       icon: Zap
     },
-    { 
-      id: 'outright-purchase', 
+    {
+      id: 'salary-sacrifice',
+      label: 'Salary Sacrifice',
+      icon: Users,
+      href: '/salary-sacrifice'
+    },
+    {
+      id: 'outright-purchase',
       label: 'Outright purchase'
     },
-    { 
-      id: 'additional-services', 
+    {
+      id: 'additional-services',
       label: 'Additional services'
     },
-    { 
-      id: 'more-info', 
+    {
+      id: 'more-info',
       label: 'More Info',
-      hasDropdown: true 
+      hasDropdown: true
     }
   ];
 
@@ -173,8 +202,16 @@ const FleetpricesHomepage = ({ onLogin }) => {
     ;(async () => {
       try {
         setLoadingDeals(true)
-        const resp = await api.getBestDeals({ limit: 12 })
-        if (!cancelled) setBestDeals(resp.data || [])
+        const [dealsResp, filtersResp] = await Promise.all([
+          api.getBestDeals({ limit: 12 }),
+          api.getFilters().catch(() => ({ manufacturers: [], fuelTypes: [], bodyTypes: [] }))
+        ])
+        if (!cancelled) {
+          setBestDeals(dealsResp.data || [])
+          setManufacturers((filtersResp.manufacturers || []).sort())
+          setFuelTypes(filtersResp.fuelTypes || [])
+          setBodyTypes(filtersResp.bodyTypes || [])
+        }
       } catch (e) {
         if (!cancelled) setError(e.message)
       } finally {
@@ -183,6 +220,24 @@ const FleetpricesHomepage = ({ onLogin }) => {
     })()
     return () => { cancelled = true }
   }, [])
+
+  const handleSearch = async () => {
+    try {
+      setLoadingDeals(true)
+      const searchFilters = {
+        ...(filters.manufacturer && { manufacturer: filters.manufacturer }),
+        ...(filters.fuelType && { fuelType: filters.fuelType }),
+        ...(filters.bodyType && { bodyType: filters.bodyType }),
+        ...(filters.maxBudget && { maxMonthly: filters.maxBudget }),
+      }
+      const resp = await api.getLeaseOffers(searchFilters)
+      setBestDeals(resp.data || [])
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoadingDeals(false)
+    }
+  }
 
   const lifestyleCategories = [
     {
@@ -314,7 +369,7 @@ const FleetpricesHomepage = ({ onLogin }) => {
                     <div style={styles.featuresGrid}>
                       {(selectedVehicle.features || []).map((feature, idx) => (
                         <div key={idx} style={styles.featureItem}>
-                          <Lightbulb size={16} style={{color: '#58f175'}} />
+                          <Lightbulb size={16} style={{color: '#f2e758'}} />
                           <span>{feature}</span>
                         </div>
                       ))}
@@ -419,14 +474,24 @@ const FleetpricesHomepage = ({ onLogin }) => {
           <nav style={styles.mainNavLinks}>
             {navItems.map((item) => (
               <div key={item.id} style={styles.navItem}>
-                <button
-                  onClick={() => item.hasDropdown && toggleDropdown(item.id)}
-                  style={styles.navLink}
-                >
-                  {item.icon && <item.icon size={16} style={{display: 'inline', marginRight: '6px'}} />}
-                  {item.label}
-                  {item.hasDropdown && <ChevronDown size={14} style={{marginLeft: '4px'}} />}
-                </button>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    style={styles.navLink}
+                  >
+                    {item.icon && <item.icon size={16} style={{display: 'inline', marginRight: '6px'}} />}
+                    {item.label}
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => item.hasDropdown && toggleDropdown(item.id)}
+                    style={styles.navLink}
+                  >
+                    {item.icon && <item.icon size={16} style={{display: 'inline', marginRight: '6px'}} />}
+                    {item.label}
+                    {item.hasDropdown && <ChevronDown size={14} style={{marginLeft: '4px'}} />}
+                  </button>
+                )}
                 
                 {item.hasDropdown && activeDropdown === item.id && (
                   <div style={styles.dropdown}>
@@ -467,6 +532,22 @@ const FleetpricesHomepage = ({ onLogin }) => {
 
       {/* Hero Section */}
       <section style={styles.hero}>
+        {/* Carousel Background */}
+        <div style={styles.carouselContainer}>
+          {carouselImages.map((image, index) => (
+            <div
+              key={index}
+              style={{
+                ...styles.carouselSlide,
+                opacity: currentSlide === index ? 1 : 0,
+                backgroundImage: `url(${image})`
+              }}
+            />
+          ))}
+        </div>
+        {/* Gradient Overlay */}
+        <div style={styles.heroOverlay} />
+
         <div style={styles.heroContent}>
           <div style={styles.heroText}>
             <h1 style={styles.heroTitle}>Your dream car leasing deal for less</h1>
@@ -497,19 +578,50 @@ const FleetpricesHomepage = ({ onLogin }) => {
             </div>
 
             <div style={styles.searchFilters}>
-              <select style={styles.filterSelect}>
-                <option>Choose your make (50)</option>
+              <select
+                style={styles.filterSelect}
+                value={filters.manufacturer}
+                onChange={(e) => setFilters({ ...filters, manufacturer: e.target.value })}
+              >
+                <option value="">Choose your make ({manufacturers.length})</option>
+                {manufacturers.map(make => (
+                  <option key={make} value={make}>{make}</option>
+                ))}
               </select>
-              <select style={styles.filterSelect}>
-                <option>Fuel type Any (4)</option>
+              <select
+                style={styles.filterSelect}
+                value={filters.fuelType}
+                onChange={(e) => setFilters({ ...filters, fuelType: e.target.value })}
+              >
+                <option value="">Fuel type Any ({fuelTypes.length})</option>
+                {fuelTypes.map(fuel => (
+                  <option key={fuel} value={fuel}>{fuel}</option>
+                ))}
               </select>
-              <select style={styles.filterSelect}>
-                <option>Body type Any (7)</option>
+              <select
+                style={styles.filterSelect}
+                value={filters.bodyType}
+                onChange={(e) => setFilters({ ...filters, bodyType: e.target.value })}
+              >
+                <option value="">Body type Any ({bodyTypes.length})</option>
+                {bodyTypes.map(body => (
+                  <option key={body} value={body}>{body}</option>
+                ))}
               </select>
-              <select style={styles.filterSelect}>
-                <option>Max budget Any (12)</option>
+              <select
+                style={styles.filterSelect}
+                value={filters.maxBudget}
+                onChange={(e) => setFilters({ ...filters, maxBudget: e.target.value })}
+              >
+                <option value="">Max budget Any</option>
+                <option value="200">Up to £200</option>
+                <option value="250">Up to £250</option>
+                <option value="300">Up to £300</option>
+                <option value="350">Up to £350</option>
+                <option value="400">Up to £400</option>
+                <option value="500">Up to £500</option>
               </select>
-              <button style={styles.showDealsButton}>Show deals →</button>
+              <button style={styles.showDealsButton} onClick={handleSearch}>Show deals →</button>
             </div>
 
             <div style={styles.inStockNotice}>
@@ -926,7 +1038,7 @@ const styles = {
     width: '100%',
     padding: '15px',
     backgroundColor: '#fff',
-    border: '2px solid #58f175',
+    border: '2px solid #f2e758',
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '16px',
@@ -943,8 +1055,8 @@ const styles = {
     display: 'flex',
     gap: '15px',
     padding: '20px',
-    backgroundColor: 'linear-gradient(135deg, #58f175 0%, #f1e758 100%)',
-    background: 'linear-gradient(135deg, #58f175 0%, #f1e758 100%)',
+    backgroundColor: 'linear-gradient(135deg, #f2e758 0%, #f1e758 100%)',
+    background: 'linear-gradient(135deg, #f2e758 0%, #f1e758 100%)',
     borderRadius: '8px',
     marginBottom: '20px',
     alignItems: 'center',
@@ -975,7 +1087,7 @@ const styles = {
     display: 'block',
     fontSize: '24px',
     fontWeight: 'bold',
-    color: '#58f175',
+    color: '#f2e758',
     textDecoration: 'none',
     marginTop: '8px',
   },
@@ -1122,17 +1234,48 @@ const styles = {
     padding: '5px 0',
   },
   hero: {
-    background: 'linear-gradient(135deg, #58f175 0%, #f1e758 100%)',
     padding: '80px 20px',
     position: 'relative',
     overflow: 'hidden',
+    minHeight: '600px',
+  },
+  carouselContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
+  carouselSlide: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    transition: 'opacity 1s ease-in-out',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(135deg, rgba(242, 231, 88, 0.85) 0%, rgba(241, 231, 88, 0.85) 100%)',
+    zIndex: 1,
   },
   heroContent: {
     maxWidth: '1400px',
     margin: '0 auto',
+    position: 'relative',
+    zIndex: 2,
   },
   heroText: {
     maxWidth: '900px',
+    position: 'relative',
   },
   heroTitle: {
     fontSize: '48px',
@@ -1186,7 +1329,7 @@ const styles = {
   },
   showDealsButton: {
     padding: '12px 40px',
-    backgroundColor: '#58f175',
+    backgroundColor: '#f2e758',
     color: '#545454',
     border: 'none',
     borderRadius: '8px',
@@ -1252,7 +1395,7 @@ const styles = {
     color: '#545454',
   },
   highlight: {
-    color: '#58f175',
+    color: '#f2e758',
   },
   sectionNav: {
     display: 'flex',
@@ -1291,7 +1434,7 @@ const styles = {
   },
   dealBadge: {
     padding: '4px 10px',
-    backgroundColor: '#58f175',
+    backgroundColor: '#f2e758',
     color: '#545454',
     fontSize: '11px',
     fontWeight: 'bold',
@@ -1381,7 +1524,7 @@ const styles = {
   quickLookButton: {
     flex: 1,
     padding: '10px',
-    backgroundColor: '#58f175',
+    backgroundColor: '#f2e758',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
