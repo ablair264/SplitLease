@@ -895,7 +895,7 @@ const UploadPage = ({ embedded = false }) => {
             <div 
               {...getRootProps()}
               className={`self-stretch h-40 p-6 rounded-xl border border-input flex flex-col justify-center items-center gap-5 cursor-pointer transition-colors ${
-                isDragActive ? 'border-amber-400 bg-amber-50' : 'bg-zinc-700/20 hover:bg-zinc-700/30'
+                isDragActive ? 'border-amber-400 bg-amber-50' : 'bg-zinc-700 bg-opacity-20 hover:bg-opacity-30'
               }`}
             >
               <input {...getInputProps()} />
@@ -907,7 +907,7 @@ const UploadPage = ({ embedded = false }) => {
                   <div className="text-Contents-Primary text-sm font-normal font-mulish leading-4">Drop your files here or</div>
                   <div className="text-amber-400 text-sm font-semibold font-mulish leading-4">Click to upload</div>
                 </div>
-                <div className="self-stretch text-center text-Contents-Tertiary/60 text-xs font-normal font-mulish leading-4">CSV or XLSX</div>
+                <div className="self-stretch text-center text-Contents-Tertiary opacity-60 text-xs font-normal font-mulish leading-4">CSV or XLSX</div>
               </div>
             </div>
             {error && (
