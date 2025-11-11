@@ -19,6 +19,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     if (id === 'ss_fleet') return '/app/ss/fleet'
     if (id === 'ss_documents') return '/app/ss/documents'
     if (id === 'robo_drivalia') return '/app/robo/drivalia'
+    if (id === 'robo_lex') return '/app/robo/lex'
     return '/app'
   }
 
@@ -33,6 +34,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     if (p.startsWith('/app/ss/fleet')) return 'ss_fleet'
     if (p.startsWith('/app/ss/documents')) return 'ss_documents'
     if (p.startsWith('/app/robo/drivalia')) return 'robo_drivalia'
+    if (p.startsWith('/app/robo/lex')) return 'robo_lex'
     return 'pricing'
   }
 
@@ -132,6 +134,7 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
             <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">RoboPrice</div>
             {[ 
               { id: 'robo_drivalia', label: 'Drivalia', icon: Bot },
+              { id: 'robo_lex', label: 'Lex Autolease', icon: Bot },
             ].map((item) => (
               <button
                 key={item.id}

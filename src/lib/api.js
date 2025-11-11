@@ -95,4 +95,13 @@ export const api = {
     window.open(url, '_blank')
   },
   viewDrivaliaResults: (jobId) => fetchJson(`/api/drivalia/jobs/${jobId}/results`),
+
+  // Lex Automation
+  getLexJobs: () => fetchJson('/api/lex/jobs'),
+  submitLexJob: (payload) => fetchJson('/api/lex/jobs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }),
+  getLexJobResults: (jobId) => fetchJson(`/api/lex/jobs/${jobId}/results`),
 }
