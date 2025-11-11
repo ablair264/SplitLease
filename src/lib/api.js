@@ -61,6 +61,10 @@ export const api = {
     form.append('file', file)
     form.append('providerName', providerName)
     if (uploadedBy) form.append('uploadedBy', uploadedBy)
+    // Optional: include upfront multiplier if provided by caller (added later from UploadPage)
+    if (typeof arguments[0]?.upfrontMultiplier !== 'undefined' && arguments[0].upfrontMultiplier !== null && arguments[0].upfrontMultiplier !== '') {
+      form.append('upfrontMultiplier', String(arguments[0].upfrontMultiplier))
+    }
     form.append('fieldMappings', JSON.stringify(fieldMappings || {}))
     if (headerNames && Array.isArray(headerNames)) {
       form.append('headerNames', JSON.stringify(headerNames))

@@ -133,6 +133,7 @@ const UploadPage = ({ embedded = false }) => {
   const [processingResults, setProcessingResults] = useState(null)
   const [showAnalyzing, setShowAnalyzing] = useState(false)
   const [progress, setProgress] = useState({ status: 'idle', processed: 0, total: 0 })
+  const [upfrontMonths, setUpfrontMonths] = useState('') // '', 1,3,6,9,12
 
   // Smart mapping function to automatically detect field mappings
   const performSmartMapping = (headers) => {
@@ -751,6 +752,16 @@ const UploadPage = ({ embedded = false }) => {
     try {
       // Run upload and local analysis in parallel. We only show results after both finish.
       const uploadPromise = api.upload({ file: selectedFile, providerName: providerName.trim(), fieldMappings, headerNames: fileData?.headers })
+        .catch((e) => { throw e })
+      // Attach upfrontMonths into the upload call (extend form fields)
+      // Note: api.upload already forwards upfrontMultiplier if provided in the payload
+      const uploadPromiseWithUpfront = api.upload({
+        file: selectedFile,
+        providerName: providerName.trim(),
+        fieldMappings,
+        headerNames: fileData?.headers,
+        upfrontMultiplier: upfrontMonths || ''
+      })
 
       // Start analysis immediately (local-only)
       const analysisPromise = (async () => {
@@ -822,7 +833,7 @@ const UploadPage = ({ embedded = false }) => {
         }
       })()
 
-      const uploadResp = await uploadPromise
+      const uploadResp = await uploadPromiseWithUpfront
       // Poll upload status until completed
       const sessionId = uploadResp.sessionId
       const poll = async () => {
@@ -954,6 +965,24 @@ const UploadPage = ({ embedded = false }) => {
                   onChange={(e) => setProviderName(e.target.value)}
                   className="max-w-md"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Upfront months (optional):</label>
+                <Select
+                  value={upfrontMonths}
+                  onChange={(e) => setUpfrontMonths(e.target.value)}
+                  className="max-w-md"
+                >
+                  <option value="">Use column (if mapped) or 0</option>
+                  <option value="1">1 month</option>
+                  <option value="3">3 months</option>
+                  <option value="6">6 months</option>
+                  <option value="9">9 months</option>
+                  <option value="12">12 months</option>
+                </Select>
+                <div className="text-xs text-muted-foreground mt-1">
+                  If set, multiplies Monthly Rental to compute upfront payment when no upfront column is mapped.
+                </div>
               </div>
 
               {savedMappings.length > 0 && (
