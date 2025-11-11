@@ -122,18 +122,18 @@ const PricingMatrixPage = () => {
         offer.model,
         offer.variant || '',
         offer.cap_code || '',
-        offer.provider_name || '',
-        offer.monthly_rental,
-        offer.upfront_payment || 0,
-        offer.term_months,
-        offer.annual_mileage,
+        offer.best_provider_name || '',
+        offer.best_monthly_rental,
+        offer.best_upfront_payment || 0,
+        offer.best_term_months,
+        offer.best_annual_mileage,
         offer.p11d_price || '',
         offer.fuel_type || '',
         offer.co2_emissions || '',
         offer.mpg || '',
         offer.body_style || '',
-        offer.deal_score || '',
-        offer.total_cost || ''
+        offer.best_deal_score || '',
+        (offer.best_monthly_rental * offer.best_term_months + (offer.best_upfront_payment || 0)) || ''
       ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
     ].join('\n')
 
@@ -335,13 +335,13 @@ const PricingMatrixPage = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="font-medium text-zinc-100">{offer.provider_name || '—'}</div>
+                      <div className="font-medium text-zinc-100">{offer.best_provider_name || '—'}</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="font-medium text-zinc-100">{formatCurrency(offer.monthly_rental)}</div>
-                      {offer.upfront_payment > 0 && (
+                      <div className="font-medium text-zinc-100">{formatCurrency(offer.best_monthly_rental)}</div>
+                      {offer.best_upfront_payment > 0 && (
                         <div className="text-xs text-zinc-400">
-                          + {formatCurrency(offer.upfront_payment)} upfront
+                          + {formatCurrency(offer.best_upfront_payment)} upfront
                         </div>
                       )}
                     </td>
@@ -349,8 +349,8 @@ const PricingMatrixPage = () => {
                       {formatCurrency(offer.p11d_price)}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-zinc-100">{offer.term_months || 'N/A'} months</div>
-                      <div className="text-xs text-zinc-400">{formatNumber(offer.annual_mileage)} miles/year</div>
+                      <div className="text-sm text-zinc-100">{offer.best_term_months || 'N/A'} months</div>
+                      <div className="text-xs text-zinc-400">{formatNumber(offer.best_annual_mileage)} miles/year</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-zinc-100">{offer.fuel_type || 'N/A'}</div>
@@ -362,17 +362,17 @@ const PricingMatrixPage = () => {
                       )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      {offer.deal_score && (
-                        <span 
+                      {offer.best_deal_score && (
+                        <span
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                          style={{ backgroundColor: getScoreColor(offer.deal_score) }}
+                          style={{ backgroundColor: getScoreColor(offer.best_deal_score) }}
                         >
-                          {Math.round(offer.deal_score)}
+                          {Math.round(offer.best_deal_score)}
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-zinc-100">
-                      {formatCurrency(offer.total_cost)}
+                      {formatCurrency((offer.best_monthly_rental || 0) * (offer.best_term_months || 0) + (offer.best_upfront_payment || 0))}
                     </td>
                   </tr>
                 ))}
