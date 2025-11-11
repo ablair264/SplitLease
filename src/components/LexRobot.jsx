@@ -12,6 +12,8 @@ export default function LexRobot() {
   const [processing, setProcessing] = useState(false)
   const [progressStatus, setProgressStatus] = useState('')
   const [results, setResults] = useState([])
+  const [workerStatus, setWorkerStatus] = useState(null)
+  const [reloginInProgress, setReloginInProgress] = useState(false)
   const pollingRef = useRef(null)
 
   useEffect(() => {
@@ -25,7 +27,30 @@ export default function LexRobot() {
   }, [])
 
   const reloadAll = async () => {
-    await Promise.all([loadVehicles(), loadStats()])
+    await Promise.all([loadVehicles(), loadStats(), loadWorkerStatus()])
+  }
+
+  const loadWorkerStatus = async () => {
+    try {
+      const { data } = await api.getLexWorkerStatus()
+      setWorkerStatus(data)
+    } catch (e) {
+      console.error('Failed to load worker status:', e)
+      setWorkerStatus(null)
+    }
+  }
+
+  const handleForceRelogin = async () => {
+    setReloginInProgress(true)
+    try {
+      await api.forceLexWorkerRelogin()
+      await loadWorkerStatus()
+      alert('Worker re-login completed successfully!')
+    } catch (e) {
+      alert('Re-login failed: ' + e.message)
+    } finally {
+      setReloginInProgress(false)
+    }
   }
 
   const loadVehicles = async () => {
@@ -250,6 +275,49 @@ export default function LexRobot() {
             Refresh
           </Button>
         </div>
+
+        {/* Worker Status */}
+        {workerStatus && (
+          <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${workerStatus.isLoggedIn ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className="font-medium text-foreground">
+                  Worker: {workerStatus.isLoggedIn ? 'Logged In' : 'Not Logged In'}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleForceRelogin}
+                disabled={reloginInProgress}
+              >
+                {reloginInProgress ? (
+                  <><Loader2 className="w-3 h-3 mr-2 animate-spin" />Re-logging in...</>
+                ) : (
+                  <><RefreshCw className="w-3 h-3 mr-2" />Force Re-login</>
+                )}
+              </Button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div>
+                <div className="text-muted-foreground">Processing Jobs</div>
+                <div className="font-medium text-foreground">{workerStatus.processingJobs || 0}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Last Login</div>
+                <div className="font-medium text-foreground">
+                  {workerStatus.lastLoginTime ? new Date(workerStatus.lastLoginTime).toLocaleTimeString() : 'Never'}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Running</div>
+                <div className="font-medium text-foreground">{workerStatus.isRunning ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="px-4 py-3 rounded-lg bg-muted/50">
             <div className="text-2xl font-bold text-foreground">{stats.total}</div>

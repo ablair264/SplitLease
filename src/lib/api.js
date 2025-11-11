@@ -104,4 +104,8 @@ export const api = {
     body: JSON.stringify(payload)
   }),
   getLexJobResults: (jobId) => fetchJson(`/api/lex/jobs/${jobId}/results`),
+
+  // Lex Worker Control
+  getLexWorkerStatus: () => fetchJson('/api/lex/worker/status'),
+  forceLexWorkerRelogin: () => fetchJson('/api/lex/worker/relogin', { method: 'POST' }),
 }
