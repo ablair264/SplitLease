@@ -442,7 +442,7 @@ const PricingMatrixPage = () => {
               </button>
             </div>
             <div className="overflow-y-auto max-h-[calc(90vh-60px)]">
-              <UploadPage />
+              <UploadPage embedded={true} />
             </div>
           </div>
         </div>

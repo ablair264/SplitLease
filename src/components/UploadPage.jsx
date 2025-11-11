@@ -120,7 +120,7 @@ const FIELD_MAPPING_PATTERNS = {
   ]
 }
 
-const UploadPage = () => {
+const UploadPage = ({ embedded = false }) => {
   // Upload states
   const [uploadState, setUploadState] = useState('idle') // idle, mapping, processing, results
   const [fileData, setFileData] = useState(null)
@@ -1115,7 +1115,12 @@ const UploadPage = () => {
     )
   }
 
-  return (
+  // Conditional wrapper for embedded mode
+  const content = embedded ? (
+    <div className="p-6">
+      {renderUploadContent()}
+    </div>
+  ) : (
     <div className="pt-8 px-7">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -1126,6 +1131,12 @@ const UploadPage = () => {
       <Card className="max-w-4xl p-8 bg-muted rounded-2xl border border-input">
         {renderUploadContent()}
       </Card>
+    </div>
+  )
+
+  return (
+    <>
+      {content}
 
       <Modal open={showAnalyzing} title="Analyzing data">
         <div className="space-y-2">
@@ -1151,7 +1162,7 @@ const UploadPage = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   )
 }
 
