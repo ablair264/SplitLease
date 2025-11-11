@@ -56,14 +56,14 @@ export const api = {
   }),
   getSSReport: (salesperson) => fetchJson(`/api/ss/enquiries/report?salesperson=${encodeURIComponent(salesperson)}`),
   search: (q, limit = 20) => fetchJson(`/api/search?q=${encodeURIComponent(q)}&limit=${limit}`),
-  upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy }) => {
+  upload: async ({ file, providerName, fieldMappings, headerNames, uploadedBy, upfrontMultiplier }) => {
     const form = new FormData()
     form.append('file', file)
     form.append('providerName', providerName)
     if (uploadedBy) form.append('uploadedBy', uploadedBy)
     // Optional: include upfront multiplier if provided by caller (added later from UploadPage)
-    if (typeof arguments[0]?.upfrontMultiplier !== 'undefined' && arguments[0].upfrontMultiplier !== null && arguments[0].upfrontMultiplier !== '') {
-      form.append('upfrontMultiplier', String(arguments[0].upfrontMultiplier))
+    if (typeof upfrontMultiplier !== 'undefined' && upfrontMultiplier !== null && upfrontMultiplier !== '') {
+      form.append('upfrontMultiplier', String(upfrontMultiplier))
     }
     form.append('fieldMappings', JSON.stringify(fieldMappings || {}))
     if (headerNames && Array.isArray(headerNames)) {
