@@ -324,7 +324,8 @@ const PricingMatrixPage = () => {
                 max="100"
               />
             </div>
-          </div>
+              </div>
+            </>
           )}
 
           {filtersExpanded && (
