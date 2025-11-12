@@ -13,7 +13,7 @@ export default function DrivaliRobot() {
     terms: 'ALL',
     mileages: 'ALL',
     maintenance: false,
-    deposit: 0
+    upfrontPayment: '1' // Number of months upfront
   })
 
   const [jobs, setJobs] = useState([])
@@ -71,7 +71,7 @@ export default function DrivaliRobot() {
         terms: 'ALL',
         mileages: 'ALL',
         maintenance: false,
-        deposit: 0
+        upfrontPayment: '1'
       })
 
       // Reload jobs
@@ -210,14 +210,18 @@ export default function DrivaliRobot() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Deposit (£)</label>
-              <Input
-                type="number"
-                min="0"
-                step="100"
-                value={jobConfig.deposit}
-                onChange={(e) => setJobConfig({...jobConfig, deposit: Number(e.target.value)})}
-              />
+              <label className="block text-sm font-medium text-foreground mb-2">Upfront Payment</label>
+              <Select
+                value={jobConfig.upfrontPayment}
+                onChange={(e) => setJobConfig({...jobConfig, upfrontPayment: e.target.value})}
+              >
+                <option value="1">1 month upfront</option>
+                <option value="2">2 months upfront</option>
+                <option value="3">3 months upfront</option>
+                <option value="6">6 months upfront</option>
+                <option value="9">9 months upfront</option>
+                <option value="12">12 months upfront</option>
+              </Select>
             </div>
 
             <div className="flex items-end">
