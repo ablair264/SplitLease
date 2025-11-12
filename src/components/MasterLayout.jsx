@@ -76,9 +76,9 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
 
   return (
     <div className="w-full h-screen bg-background">
-      <div className="flex h-full">
+      <div className="flex h-full min-w-0">
         {/* Sidebar */}
-        <div className="w-56 border-r border-border bg-card flex flex-col p-3">
+        <div className="w-56 flex-shrink-0 border-r border-border bg-card flex flex-col p-3">
           {/* Logo */}
           <div className="px-3 py-4 mb-2">
             <div className="flex items-center gap-2">
@@ -162,13 +162,13 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex">
-          <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 flex min-w-0">
+          <div className="flex-1 overflow-y-auto min-w-0">
             {children({ activePage, setActivePage })}
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-72 border-l border-border bg-card p-4 overflow-y-auto">
+          <div className="w-72 flex-shrink-0 border-l border-border bg-card p-4 overflow-y-auto">
             {/* Activities Section */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-foreground mb-3">Activities</h3>
