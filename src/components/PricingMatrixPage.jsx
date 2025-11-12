@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Upload, Download, Filter, X, Trash2 } from 'lucide-react'
+import { Upload, Download, Filter, X, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -27,6 +27,7 @@ const PricingMatrixPage = () => {
   const [bodyStyles, setBodyStyles] = useState([])
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [error, setError] = useState('')
+  const [filtersExpanded, setFiltersExpanded] = useState(true)
 
   const loadLeaseOffers = useCallback(async () => {
     try {
@@ -224,22 +225,32 @@ const PricingMatrixPage = () => {
       {/* Filters Section */}
       <Card className="p-6 mb-8">
         <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className="flex items-center gap-2 mb-4 w-full text-left hover:opacity-80 transition-opacity"
+          >
             <Filter className="w-5 h-5 text-amber-600" />
             <h3 className="text-lg font-medium">Filter Offers</h3>
-          </div>
+            {filtersExpanded ? (
+              <ChevronUp className="w-4 h-4 ml-auto" />
+            ) : (
+              <ChevronDown className="w-4 h-4 ml-auto" />
+            )}
+          </button>
           
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Search:</label>
-            <Input
-              type="text"
-              placeholder="Search by manufacturer, model, variant, or CAP code..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-            />
-          </div>
+          {filtersExpanded && (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Search:</label>
+                <Input
+                  type="text"
+                  placeholder="Search by manufacturer, model, variant, or CAP code..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                />
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Manufacturer:</label>
               <Select
@@ -314,16 +325,19 @@ const PricingMatrixPage = () => {
               />
             </div>
           </div>
+          )}
 
-          <div className="flex justify-between items-center pt-4">
-            <Button onClick={clearFilters} variant="outline">
-              <X className="w-4 h-4 mr-2" />
-              Clear Filters
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              <strong>{filteredOffers.length}</strong> of <strong>{totalOffers}</strong> offers shown
+          {filtersExpanded && (
+            <div className="flex justify-between items-center pt-4">
+              <Button onClick={clearFilters} variant="outline">
+                <X className="w-4 h-4 mr-2" />
+                Clear Filters
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                <strong>{filteredOffers.length}</strong> of <strong>{totalOffers}</strong> offers shown
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </Card>
 

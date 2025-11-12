@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Download, Filter, X } from 'lucide-react'
+import { Download, Filter, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -24,6 +24,7 @@ const BestDealsPage = () => {
   const [activeTab, setActiveTab] = useState('cars') // cars | vans
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [selectedDeal, setSelectedDeal] = useState(null)
+  const [filtersExpanded, setFiltersExpanded] = useState(true)
 
   const computeBreakdown = (deal) => {
     // Align with DB's insert_lease_offer scoring
@@ -211,12 +212,21 @@ const BestDealsPage = () => {
               onClick={() => setActiveTab('vans')}
             >Vans</button>
           </div>
-          <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className="flex items-center gap-2 mb-4 w-full text-left hover:opacity-80 transition-opacity"
+          >
             <Filter className="w-5 h-5 text-amber-600" />
             <h3 className="text-lg font-medium">Filter Deals</h3>
-          </div>
+            {filtersExpanded ? (
+              <ChevronUp className="w-4 h-4 ml-auto" />
+            ) : (
+              <ChevronDown className="w-4 h-4 ml-auto" />
+            )}
+          </button>
           
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {filtersExpanded && (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Manufacturer:</label>
               <Select 
@@ -278,16 +288,19 @@ const BestDealsPage = () => {
               />
             </div>
           </div>
+          )}
 
-          <div className="flex justify-between items-center pt-4">
-            <Button onClick={clearFilters} variant="outline">
-              <X className="w-4 h-4 mr-2" />
-              Clear Filters
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              <strong>{totalDeals}</strong> deals found
+          {filtersExpanded && (
+            <div className="flex justify-between items-center pt-4">
+              <Button onClick={clearFilters} variant="outline">
+                <X className="w-4 h-4 mr-2" />
+                Clear Filters
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                <strong>{totalDeals}</strong> deals found
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </Card>
 

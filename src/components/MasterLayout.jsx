@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Award, BarChart3, Building2, Table, Users, Briefcase, Tag, ClipboardList, CarFront, FileText, Bot } from 'lucide-react'
+import { LayoutDashboard, Award, BarChart3, Building2, Table, Users, Briefcase, Tag, ClipboardList, CarFront, FileText, Bot, ChevronLeft, ChevronRight } from 'lucide-react'
 import { api } from '../lib/api'
 
 const MasterLayout = ({ children, currentPage = 'pricing' }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [activePage, setActivePageState] = useState(currentPage)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [activityBarCollapsed, setActivityBarCollapsed] = useState(false)
 
   const routeFor = (id) => {
     if (id === 'pricing') return '/app'
@@ -78,14 +80,29 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
     <div className="w-full h-screen bg-background">
       <div className="flex h-full min-w-0">
         {/* Sidebar */}
-        <div className="w-56 flex-shrink-0 border-r border-border bg-card flex flex-col p-3">
+        <div className={`${sidebarCollapsed ? 'w-16' : 'w-56'} flex-shrink-0 border-r border-border bg-card flex flex-col p-3 transition-all duration-300 relative`}>
+          {/* Toggle Button */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="absolute -right-3 top-4 z-10 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-foreground" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 text-foreground" />
+            )}
+          </button>
+
           {/* Logo */}
           <div className="px-3 py-4 mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                 <span className="text-primary-foreground font-bold text-sm">LA</span>
               </div>
-              <div className="font-semibold text-foreground">Lease Analyzer</div>
+              {!sidebarCollapsed && (
+                <div className="font-semibold text-foreground">Lease Analyzer</div>
+              )}
             </div>
           </div>
 
@@ -95,19 +112,22 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
               <button
                 key={item.id}
                 onClick={() => setActivePage(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activePage === item.id
                     ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                 }`}
+                title={sidebarCollapsed ? item.label : ''}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.label}</span>}
               </button>
             ))}
 
             {/* Salary Sacrifice section header */}
-            <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">Salary Sacrifice</div>
+            {!sidebarCollapsed && (
+              <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">Salary Sacrifice</div>
+            )}
             {[ 
               { id: 'ss_customers', label: 'Customers', icon: Users },
               { id: 'ss_sales', label: 'Sales', icon: Briefcase },
@@ -119,19 +139,22 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
               <button
                 key={item.id}
                 onClick={() => setActivePage(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activePage === item.id
                     ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                 }`}
+                title={sidebarCollapsed ? item.label : ''}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.label}</span>}
               </button>
             ))}
 
             {/* RoboPrice section header */}
-            <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">RoboPrice</div>
+            {!sidebarCollapsed && (
+              <div className="px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-muted-foreground">RoboPrice</div>
+            )}
             {[ 
               { id: 'robo_drivalia', label: 'Drivalia', icon: Bot },
               { id: 'robo_lex', label: 'Lex Autolease', icon: Bot },
@@ -139,26 +162,29 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
               <button
                 key={item.id}
                 onClick={() => setActivePage(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activePage === item.id
                     ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                 }`}
+                title={sidebarCollapsed ? item.label : ''}
               >
-                <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.label}</span>}
               </button>
             ))}
           </nav>
 
           {/* Bottom section */}
-          <div className="pt-4 mt-4 border-t border-border">
-            <div className="px-3 py-2 rounded-lg bg-muted/50">
-              <div className="text-xs text-muted-foreground text-center">
-                Lease Analyzer v1.0
+          {!sidebarCollapsed && (
+            <div className="pt-4 mt-4 border-t border-border">
+              <div className="px-3 py-2 rounded-lg bg-muted/50">
+                <div className="text-xs text-muted-foreground text-center">
+                  Lease Analyzer v1.0
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Content */}
@@ -168,43 +194,65 @@ const MasterLayout = ({ children, currentPage = 'pricing' }) => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="w-72 flex-shrink-0 border-l border-border bg-card p-4 overflow-y-auto">
-            {/* Activities Section */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Activities</h3>
-              <div className="space-y-3">
-                {(activity || []).map((a, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-foreground truncate">{a.provider_name || 'Upload'}</div>
-                      <div className="text-xs text-muted-foreground">{a.filename} • {new Date(a.created_at).toLocaleString()}</div>
-                    </div>
-                  </div>
-                ))}
-                {(!activity || activity.length === 0) && (
-                  <div className="text-xs text-muted-foreground">No recent uploads.</div>
-                )}
-              </div>
-            </div>
+          <div className={`${activityBarCollapsed ? 'w-0' : 'w-72'} flex-shrink-0 border-l border-border bg-card overflow-hidden transition-all duration-300 relative`}>
+            {!activityBarCollapsed && (
+              <div className="p-4 overflow-y-auto h-full">
+                {/* Toggle Button */}
+                <button
+                  onClick={() => setActivityBarCollapsed(!activityBarCollapsed)}
+                  className="absolute -left-3 top-4 z-10 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Collapse activity bar"
+                >
+                  <ChevronRight className="w-4 h-4 text-foreground" />
+                </button>
 
-            {/* Top Offers Section */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Top 10 Offers</h3>
-              <div className="space-y-2">
-                {(topOffers || []).map((offer, index) => (
-                  <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-secondary/50 transition-colors">
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
-                    </div>
-                    <span className="text-sm text-foreground">{offer.manufacturer} {offer.model}</span>
+                {/* Activities Section */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Activities</h3>
+                  <div className="space-y-3">
+                    {(activity || []).map((a, index) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-foreground truncate">{a.provider_name || 'Upload'}</div>
+                          <div className="text-xs text-muted-foreground">{a.filename} • {new Date(a.created_at).toLocaleString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {(!activity || activity.length === 0) && (
+                      <div className="text-xs text-muted-foreground">No recent uploads.</div>
+                    )}
                   </div>
-                ))}
-                {(!topOffers || topOffers.length === 0) && (
-                  <div className="text-xs text-muted-foreground">No top offers yet.</div>
-                )}
+                </div>
+
+                {/* Top Offers Section */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Top 10 Offers</h3>
+                  <div className="space-y-2">
+                    {(topOffers || []).map((offer, index) => (
+                      <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-secondary/50 transition-colors">
+                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
+                        </div>
+                        <span className="text-sm text-foreground">{offer.manufacturer} {offer.model}</span>
+                      </div>
+                    ))}
+                    {(!topOffers || topOffers.length === 0) && (
+                      <div className="text-xs text-muted-foreground">No top offers yet.</div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {activityBarCollapsed && (
+              <button
+                onClick={() => setActivityBarCollapsed(!activityBarCollapsed)}
+                className="absolute -left-3 top-4 z-10 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                aria-label="Expand activity bar"
+              >
+                <ChevronLeft className="w-4 h-4 text-foreground" />
+              </button>
+            )}
           </div>
         </div>
       </div>
