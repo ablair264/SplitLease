@@ -5,6 +5,7 @@ import FileUpload from './components/FileUpload'
 import Home from './components/Home'
 import Login from './components/Login'
 import FleetFlexPage from './components/FleetFlexPage'
+import EmployeeSavingsPortal from './components/EmployeeSavingsPortal'
 import './App.css'
 
 const isAuthed = () => Boolean(localStorage.getItem('auth_user'))
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/salary-sacrifice" element={<FleetFlexPage />} />
+          <Route path="/salary-sacrifice/portal" element={<EmployeeSavingsPortal />} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/app/deals" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

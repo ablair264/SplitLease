@@ -112,4 +112,11 @@ export const api = {
   // Lex Worker Control
   getLexWorkerStatus: () => fetchJson('/api/lex/worker/status'),
   forceLexWorkerRelogin: () => fetchJson('/api/lex/worker/relogin', { method: 'POST' }),
+
+  // Employee Savings Portal
+  calculateEmployeeSavings: (payload) => fetchJson('/api/employee-savings/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }),
 }
