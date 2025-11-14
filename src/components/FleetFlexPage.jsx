@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom'; // Removed this line
+import { useNavigate } from 'react-router-dom';
 import {
   Car,
   Calculator,
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const FleetFlexPage = () => {
-  // const navigate = useNavigate(); // Removed this line
+  const navigate = useNavigate();
   const [salary, setSalary] = useState('35000');
   const [monthlyLease, setMonthlyLease] = useState('400');
   const [taxBand, setTaxBand] = useState('basic'); // Added for calculator
@@ -28,18 +28,28 @@ const FleetFlexPage = () => {
   const calculateSavings = () => {
     const annualSalary = parseFloat(salary) || 0;
     const monthlyPayment = parseFloat(monthlyLease) || 0;
+    
+    // Return zeros if inputs are invalid
+    if (annualSalary <= 0 || monthlyPayment <= 0) {
+      return {
+        annualSaving: '0.00',
+        monthlySaving: '0.00',
+        effectiveMonthlyCost: monthlyPayment.toFixed(2)
+      };
+    }
+
     const annualCost = monthlyPayment * 12;
 
     let taxRate = 0.32; // Basic: 20% Tax + 12% NI
     switch (taxBand) {
       case 'basic':
-        taxRate = 0.32;
+        taxRate = 0.32; // 20% income tax + 12% NI
         break;
       case 'higher':
-        taxRate = 0.42; // Higher: 40% Tax + 2% NI
+        taxRate = 0.42; // 40% income tax + 2% NI
         break;
       case 'additional':
-        taxRate = 0.47; // Additional: 45% Tax + 2% NI
+        taxRate = 0.47; // 45% income tax + 2% NI
         break;
       default:
         taxRate = 0.32;
@@ -47,11 +57,12 @@ const FleetFlexPage = () => {
 
     const taxSaving = annualCost * taxRate;
     const monthlySaving = taxSaving / 12;
+    const effectiveMonthlyCost = Math.max(0, monthlyPayment - monthlySaving); // Ensure non-negative
 
     return {
       annualSaving: taxSaving.toFixed(2),
       monthlySaving: monthlySaving.toFixed(2),
-      effectiveMonthlyCost: (monthlyPayment - monthlySaving).toFixed(2)
+      effectiveMonthlyCost: effectiveMonthlyCost.toFixed(2)
     };
   };
 
@@ -78,7 +89,12 @@ const FleetFlexPage = () => {
             A zero-cost, zero-admin benefit for employers. A huge saving for employees.
           </p>
           <div style={styles.heroCTA}>
-            <button style={styles.primaryButton}>Calculate Your Savings</button>
+            <button 
+              style={styles.primaryButton}
+              onClick={() => navigate('/salary-sacrifice/portal')}
+            >
+              Calculate Your Savings
+            </button>
             <button style={styles.secondaryButton}>Browse Vehicles</button>
           </div>
         </div>
@@ -566,6 +582,7 @@ const styles = {
     borderRadius: '8px',
     fontWeight: 'bold',
     boxSizing: 'border-box', // Added for consistency
+    color: '#000', // Black text color
   },
   select: {
     appearance: 'none',
@@ -574,6 +591,7 @@ const styles = {
     backgroundPosition: 'right 15px center',
     backgroundSize: '16px',
     paddingRight: '40px',
+    color: '#000', // Black text color
   },
   calculatorResults: {
     backgroundColor: '#f8f8f8',
